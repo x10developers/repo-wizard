@@ -168,7 +168,7 @@ app.post("/webhook", async (req, res) => {
         repo: name,
         issue_number: req.body.issue.number,
         body:
-          "Thank you for opening this issue. " +
+          "Thank you for opening this issue lawdya. " +
           "Repo-Wizrd monitors activity and will follow up if this issue becomes inactive.",
       });
 
