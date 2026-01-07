@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/banner.png" alt="Reporeply width="300" height="400" >
+  <img src="./assets/banner.png" alt="Reporeply" width="300">
 </p>
 
 # Reporeply
