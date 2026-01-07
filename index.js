@@ -235,6 +235,14 @@ app.get("/", (req, res) => {
   res.send("Repo-Wizrd server running");
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+/* -------------------- Local Testing -------------------- */
+
+// app.listen(3000, () => {
+//   console.log("Server running on http://localhost:3000");
+// });
+
+/* -------------------- Server Testing -------------------- */
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`RepoReply server running on port ${PORT}`);
 });
