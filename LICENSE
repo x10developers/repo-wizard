@@ -1,0 +1,81 @@
+
+---
+
+# 🔐 PRIVACY.md (Privacy Policy)
+
+```md
+# Privacy Policy – Reporeply
+
+Last updated: January 2026
+
+Reporeply respects user privacy and follows the principle of least privilege.
+
+---
+
+## 1. Information We Access
+
+Reporeply accesses only the data required to function:
+
+- Repository metadata
+- Issue titles, bodies, authors, labels, and timestamps
+- Installation and event metadata from GitHub webhooks
+
+---
+
+## 2. Information We Do NOT Collect
+
+Reporeply does **not** collect or store:
+
+- Personal profile data
+- Email addresses
+- Passwords or credentials
+- Source code
+- Pull request data
+- Private messages
+
+---
+
+## 3. Data Storage
+
+- Reporeply does **not** maintain a persistent database
+- All processing is done in memory
+- No issue content is stored after processing
+
+---
+
+## 4. Authentication & Security
+
+- Uses GitHub App authentication
+- Uses short-lived installation access tokens
+- Webhooks are verified using a shared secret
+- Cron endpoints are protected by a secret header
+
+---
+
+## 5. Third Parties
+
+Reporeply does not share data with any third parties.  
+All interactions occur directly between GitHub and the deployed Reporeply instance.
+
+---
+
+## 6. User Control
+
+Users can:
+- Uninstall the GitHub App at any time
+- Remove repository access instantly
+- Disable functionality by uninstalling
+
+Once uninstalled, Reporeply no longer receives any data.
+
+---
+
+## 7. Changes to This Policy
+
+If this policy changes, updates will be published in this repository.
+
+---
+
+## 8. Contact
+
+For privacy-related questions, please open an issue in the repository.
