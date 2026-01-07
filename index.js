@@ -17,6 +17,8 @@ const MS_IN_DAY = 24 * 60 * 60 * 1000;
 const app = express();
 app.use(express.json());
 
+const PORT = process.env.PORT || 3000;
+
 app.post("/", (req, res) => {
   console.log("Webhook received");
   console.log("Event:", req.headers["x-github-event"]);
@@ -235,14 +237,8 @@ app.get("/", (req, res) => {
   res.send("Repo-Wizrd server running");
 });
 
-/* -------------------- Local Testing -------------------- */
-
-// app.listen(3000, () => {
-//   console.log("Server running on http://localhost:3000");
-// });
-
 /* -------------------- Server Testing Part -------------------- */
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`RepoReply server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
