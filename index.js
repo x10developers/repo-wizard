@@ -185,7 +185,7 @@ app.post("/webhook", async (req, res) => {
         issue_number: req.body.issue.number,
         body:
           "Thank you for opening this issue. " +
-          "We have started monitoring this issue.",
+          "We have started monitoring on this issue.",
       });
 
       console.log("Auto-comment posted");
