@@ -1,388 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RepoReply - Automated Repository Maintenance</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #e5e7eb;
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .hero-section {
-      text-align: center;
-      margin-bottom: 60px;
-      animation: fadeIn 1s ease-in;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .main-logo {
-      width: 200px;
-      height: 200px;
-      margin: 0 auto 30px;
-      background: url('https://raw.githubusercontent.com/Coderxrohan/project-assets/main/public/Reporeply.png') center/cover no-repeat;
-      border-radius: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 20px 60px rgba(56, 189, 248, 0.3);
-      transition: transform 0.3s ease;
-      cursor: pointer;
-    }
-    
-    .main-logo:hover {
-      transform: scale(1.05);
-    }
-    
-    .hero-username {
-      color: #94a3b8;
-      font-size: 18px;
-      margin: 10px 0 20px;
-      text-decoration: none;
-      display: inline-block;
-      transition: color 0.3s ease;
-    }
-    
-    .hero-username:hover {
-      color: #38bdf8;
-    }
-    
-    .hero-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      margin-top: 30px;
-      flex-wrap: wrap;
-    }
-    
-    .hero-btn {
-      padding: 12px 30px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-      color: white;
-    }
-    
-    .hero-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4);
-    }
-    
-    .hero-btn svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-    
-    h1 {
-      font-size: 48px;
-      color: #38bdf8;
-      margin-bottom: 20px;
-      font-weight: 700;
-    }
-    
-    .bio-section {
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 40px;
-      margin-bottom: 60px;
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      line-height: 1.8;
-      font-size: 18px;
-      animation: fadeIn 1.2s ease-in;
-    }
-    
-    .bio-section h2 {
-      color: #38bdf8;
-      margin-bottom: 20px;
-      font-size: 28px;
-    }
-    
-    .logos-section {
-      display: flex;
-      justify-content: center;   /* centers the pair */
-      gap: 40px;                 /* space between cards */
-      margin-bottom: 60px;
-      animation: fadeIn 1.4s ease-in;
-    }
-   
-    .logo-card {
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 30px;
-      text-align: center;
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .logo-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(56, 189, 248, 0.2);
-    }
-    
-    .logo-image {
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 20px;
-      background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    
-    .logo-image:hover {
-      transform: scale(1.05);
-    }
-    
-    .logo-image.contributor-img {
-      background: url('https://raw.githubusercontent.com/Coderxrohan/project-assets/main/public/Coderxrohan.jpg') center/cover no-repeat;
-    }
-    
-    .logo-image.org-img {
-      background: url('https://raw.githubusercontent.com/Coderxrohan/project-assets/main/public/x10DEV.png') center/cover no-repeat;
-      background-color: white;
-    }
-    
-    .logo-card h3 {
-      color: #38bdf8;
-      margin-bottom: 10px;
-      font-size: 22px;
-    }
-    
-    .logo-card .username {
-      color: #94a3b8;
-      font-size: 16px;
-      margin-bottom: 15px;
-      cursor: pointer;
-      transition: color 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
-    }
-    
-    .logo-card .username:hover {
-      color: #38bdf8;
-    }
-    
-    .logo-card p {
-      color: #cbd5e1;
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    
-    .contributors-section {
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 40px;
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      animation: fadeIn 1.6s ease-in;
-    }
-    
-    .contributors-section h2 {
-      color: #38bdf8;
-      margin-bottom: 30px;
-      text-align: center;
-      font-size: 28px;
-    }
-    
-    .contributors-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-    }
-    
-    .contributor-card {
-      background: rgba(15, 23, 42, 0.6);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    
-    .contributor-card:hover {
-      border-color: #38bdf8;
-      transform: scale(1.05);
-      background: rgba(56, 189, 248, 0.1);
-    }
-    
-    .contributor-avatar {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 15px;
-      background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-    }
-    
-    .contributor-name {
-      color: #38bdf8;
-      font-weight: 600;
-      margin-bottom: 5px;
-      font-size: 18px;
-    }
-    
-    .contributor-role {
-      color: #94a3b8;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    
-    .contributor-bio {
-      color: #cbd5e1;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    
-    .footer {
-      text-align: center;
-      margin-top: 60px;
-      padding-top: 30px;
-      border-top: 1px solid rgba(56, 189, 248, 0.2);
-      color: #94a3b8;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="hero-section">
-      <a href="https://github.com/Coderxrohan/RepoReply" target="_blank" style="text-decoration: none;">
-        <div class="main-logo"></div>
-      </a>
-      <h1>RepoReply</h1>
-      <a href="https://github.com/Coderxrohan/RepoReply" target="_blank" class="hero-username">@RepoReply</a>
-      <p style="font-size: 20px; color: #94a3b8;">Automated Repository Maintenance Tool</p>
-      
-      <div class="hero-buttons">
-        <a href="https://github.com/Coderxrohan/RepoReply" target="_blank" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          GitHub
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RepoReply - Automated Repository Maintenance</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #e5e7eb;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .hero-section {
+        text-align: center;
+        margin-bottom: 60px;
+        animation: fadeIn 1s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .main-logo {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 30px;
+        background: url("https://raw.githubusercontent.com/Coderxrohan/project-assets/main/public/Reporeply.png")
+          center/cover no-repeat;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 20px 60px rgba(56, 189, 248, 0.3);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+      }
+
+      .main-logo:hover {
+        transform: scale(1.05);
+      }
+
+      .hero-username {
+        color: #94a3b8;
+        font-size: 18px;
+        margin: 10px 0 20px;
+        text-decoration: none;
+        display: inline-block;
+        transition: color 0.3s ease;
+      }
+
+      .hero-username:hover {
+        color: #38bdf8;
+      }
+
+      .hero-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+
+      .hero-btn {
+        padding: 12px 30px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        color: white;
+      }
+
+      .hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4);
+      }
+
+      .hero-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+
+      h1 {
+        font-size: 48px;
+        color: #38bdf8;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .bio-section {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 40px;
+        margin-bottom: 60px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        line-height: 1.8;
+        font-size: 18px;
+        animation: fadeIn 1.2s ease-in;
+      }
+
+      .bio-section h2 {
+        color: #38bdf8;
+        margin-bottom: 20px;
+        font-size: 28px;
+      }
+
+      .logos-section {
+        display: flex;
+        justify-content: center; /* centers the pair */
+        gap: 40px; /* space between cards */
+        margin-bottom: 60px;
+        animation: fadeIn 1.4s ease-in;
+      }
+
+      .logo-card {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .logo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(56, 189, 248, 0.2);
+      }
+
+      .logo-image {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+
+      .logo-image:hover {
+        transform: scale(1.05);
+      }
+
+      .logo-image.contributor-img {
+        background: url("https://media.licdn.com/dms/image/v2/D4D03AQH4gYUhHyoWDg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1702391386127?e=1769644800&v=beta&t=Cj0h80Zjh7ln9nRJKOV-TIh2y-95PUBKYmc82S61Du0")
+          center/cover no-repeat;
+      }
+
+      .logo-image.org-img {
+        background: url("https://raw.githubusercontent.com/Coderxrohan/project-assets/main/public/x10DEV.png")
+          center/cover no-repeat;
+        background-color: white;
+      }
+
+      .logo-card h3 {
+        color: #38bdf8;
+        margin-bottom: 10px;
+        font-size: 22px;
+      }
+
+      .logo-card .username {
+        color: #94a3b8;
+        font-size: 16px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .logo-card .username:hover {
+        color: #38bdf8;
+      }
+
+      .logo-card p {
+        color: #cbd5e1;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .contributors-section {
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 40px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        animation: fadeIn 1.6s ease-in;
+      }
+
+      .contributors-section h2 {
+        color: #38bdf8;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 28px;
+      }
+
+      .contributors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      .contributor-card {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+
+      .contributor-card:hover {
+        border-color: #38bdf8;
+        transform: scale(1.05);
+        background: rgba(56, 189, 248, 0.1);
+      }
+
+      .contributor-avatar {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 15px;
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: bold;
+        background-size: cover;
+        background-position: center;
+        }
+      .contributor-name {
+        color: #38bdf8;
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 18px;
+      }
+
+      .contributor-role {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .contributor-bio {
+        color: #cbd5e1;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 60px;
+        padding-top: 30px;
+        border-top: 1px solid rgba(56, 189, 248, 0.2);
+        color: #94a3b8;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="hero-section">
+        <a
+          href="https://github.com/Coderxrohan/RepoReply"
+          target="_blank"
+          style="text-decoration: none"
+        >
+          <div class="main-logo"></div>
         </a>
-        <a href="mailto:contact@reporeply.com" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.779l5.513-6.812zm9.208-1.264l4.616-3.741v9.348l-4.616-5.607z"/></svg>
-          Contact
+        <h1>RepoReply</h1>
+        <a
+          href="https://github.com/Coderxrohan/RepoReply"
+          target="_blank"
+          class="hero-username"
+          >@RepoReply</a
+        >
+        <p style="font-size: 20px; color: #94a3b8">
+          Automated Repository Maintenance Tool
+        </p>
+
+        <div class="hero-buttons">
+          <a
+            href="https://github.com/x10developers/reporeply"
+            target="_blank"
+            class="hero-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
+          <a href="mailto:contact@reporeply.com" class="hero-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.779l5.513-6.812zm9.208-1.264l4.616-3.741v9.348l-4.616-5.607z"
+              />
+            </svg>
+            Contact
+          </a>
+          <a
+            href="https://github.com/x10developers/reporeply"
+            target="_blank"
+            class="hero-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 21l-8-9h6v-12h4v12h6l-8 9zm9-1v2h-18v-2h-2v4h22v-4h-2z"
+              />
+            </svg>
+            Download
+          </a>
+        </div>
+      </div>
+
+      <div class="bio-section">
+        <h2>About RepoReply</h2>
+        <p>
+          RepoReply is an automated repository maintenance tool designed to
+          reduce noise and improve project hygiene. By tracking issue and pull
+          request activity, RepoReply identifies stale items, notifies
+          contributors with gentle reminders, and optionally closes inactive
+          threads after a configurable grace period.
+        </p>
+        <p style="margin-top: 20px">
+          Built as a secure GitHub App, RepoReply uses scoped permissions,
+          short-lived tokens, and webhook-based events to operate safely across
+          multiple repositories while respecting pinned items, security-related
+          labels, and maintainer-defined exclusions.
+        </p>
+      </div>
+
+      <div class="logos-section">
+        <a
+          href="https://www.linkedin.com/in/rohansatkar"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+        >
+          <div class="logo-card">
+            <div class="logo-image contributor-img"></div>
+            <h3>Main Contributor</h3>
+            <a
+              href="https://www.linkedin.com/in/rohansatkar"
+              target="_blank"
+              class="username"
+              >@Rohansatkar</a
+            >
+            <p>
+              CSE Student @ MITWPU,Pune<br />Open-source contributor<br />GitHub
+              Developee Program Member<br />Building scalable systems &<br />fixing
+              real-world bugs
+            </p>
+          </div>
         </a>
-        <a href="https://github.com/Coderxrohan/RepoReply/releases" target="_blank" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21l-8-9h6v-12h4v12h6l-8 9zm9-1v2h-18v-2h-2v4h22v-4h-2z"/></svg>
-          Download
-        </a>
-        <a href="#" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 8c0 .557-.447 1.008-1 1.008s-1-.45-1-1.008c0-.557.447-1.008 1-1.008s1 .452 1 1.008zm0 2h-2v6h2v-6zm3 0h-2v6h2v-6zm0-2c0 .557-.447 1.008-1 1.008s-1-.45-1-1.008c0-.557.447-1.008 1-1.008s1 .452 1 1.008z"/></svg>
-          Test1
-        </a>
-        <a href="#" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 17l-5-5.299 1.399-1.43 3.574 3.736 6.572-7.007 1.455 1.403-8 8.597z"/></svg>
-          Test2
-        </a>
-        <a href="mailto:coderxrohan@gmail.com" class="hero-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.779l5.513-6.812zm9.208-1.264l4.616-3.741v9.348l-4.616-5.607z"/></svg>
-          Contact Us
+
+        <a
+          href="https://www.linkedin.com/company/x10-dev"
+          target="_blank"
+          style="text-decoration: none; color: inherit"
+        >
+          <div class="logo-card">
+            <div class="logo-image org-img"></div>
+            <h3>Organization</h3>
+            <a
+              href="https://www.linkedin.com/company/x10-dev"
+              target="_blank"
+              class="username"
+              >@x10Dev</a
+            >
+            <p>
+              Technology-Driven Software Company<br />Building modern,
+              scalable,and intelligent<br />digital products for future. We
+              believe<br />great software is built through clarity,<br />
+              simplicity, and thoughtful design.
+            </p>
+          </div>
         </a>
       </div>
-    </div>
-    
-    <div class="bio-section">
-      <h2>About RepoReply</h2>
-      <p>
-        RepoReply is an automated repository maintenance tool designed to reduce noise and improve project hygiene.
-        By tracking issue and pull request activity, RepoReply identifies stale items, notifies contributors with gentle reminders, 
-        and optionally closes inactive threads after a configurable grace period.
-      </p>
-      <p style="margin-top: 20px;">
-        Built as a secure GitHub App, RepoReply uses scoped permissions, short-lived tokens, and webhook-based events to operate 
-        safely across multiple repositories while respecting pinned items, security-related labels, and maintainer-defined exclusions.
-      </p>
-    </div>
-    
-    <div class="logos-section">
-      <a href="https://github.com/Coderxrohan" target="_blank" style="text-decoration: none; color: inherit;">
-        <div class="logo-card">
-          <div class="logo-image contributor-img"></div>
-          <h3>Main Contributor</h3>
-          <a href="https://github.com/Coderxrohan" target="_blank" class="username">@Coderxrohan</a>
-          <p>Driving innovation and excellence in repository automation</p>
-        </div>
-      </a>
-      
-      <a href="https://github.com/x10DEV" target="_blank" style="text-decoration: none; color: inherit;">
-        <div class="logo-card">
-          <div class="logo-image org-img"></div>
-          <h3>Organization</h3>
-          <a href="https://github.com/x10DEV" target="_blank" class="username">@x10DEV</a>
-          <p>Powering development teams worldwide with cutting-edge tools</p>
-        </div>
-      </a>
-    </div>
-    
-    <div class="contributors-section">
+
+        <div class="contributors-section">
       <h2>Featured Contributors</h2>
       <div class="contributors-grid">
         <a href="https://github.com/contributor1" class="contributor-card" target="_blank">
-          <div class="contributor-avatar">JD</div>
-          <div class="contributor-name">John Doe</div>
+          <div class="contributor-avatar" style="background-image: url('https://github.com/Coderxrohan/project-assets/blob/main/public/Coderxrohan.jpg?raw=true');"></div>
+          <div class="contributor-name">Coderxrohan</div>
           <div class="contributor-role">Lead Developer</div>
           <div class="contributor-bio">Passionate about automation and clean code. Building tools that make developers' lives easier.</div>
         </a>
         
-        <a href="https://github.com/contributor2" class="contributor-card" target="_blank">
-          <div class="contributor-avatar">JS</div>
-          <div class="contributor-name">Jane Smith</div>
+        <a href="https://www.instagram.com/__._.aditya._.__/" class="contributor-card" target="_blank">
+          <div class="contributor-avatar" style="background-image: url('https://github.com/Coderxrohan/project-assets/blob/main/people/Aditya-Pandit.jpg?raw=true');"></div>
+          <div class="contributor-name">Aditya Pandit</div>
           <div class="contributor-role">Core Maintainer</div>
           <div class="contributor-bio">Expert in GitHub APIs and webhooks. Ensuring RepoReply stays reliable and performant.</div>
         </a>
         
         <a href="https://github.com/contributor3" class="contributor-card" target="_blank">
-          <div class="contributor-avatar">AB</div>
-          <div class="contributor-name">Alex Brown</div>
+          <div class="contributor-avatar" style="background-image: url('https://github.com/Coderxrohan/project-assets/blob/main/people/Rohit-Thigale.jpeg?raw=true');"></div>
+          <div class="contributor-name">Rohit Thigale</div>
           <div class="contributor-role">Contributor</div>
           <div class="contributor-bio">Security-focused developer. Contributing to safe and secure repository management features.</div>
         </a>
         
-        <a href="https://github.com/contributor4" class="contributor-card" target="_blank">
-          <div class="contributor-avatar">MJ</div>
-          <div class="contributor-name">Morgan Jones</div>
-          <div class="contributor-role">Contributor</div>
-          <div class="contributor-bio">Documentation specialist and UI/UX enthusiast. Making RepoReply accessible to everyone.</div>
+        <a href="https://www.instagram.com/saurav_t_10" class="contributor-card" target="_blank">
+          <div class="contributor-avatar" style="background-image: url('https://github.com/Coderxrohan/project-assets/blob/main/people/Saurav-Thigale.jpg?raw=true');"></div>
+          <div class="contributor-name">Saurav Thigale</div>
+          <div class="contributor-role">CI/CD Controller</div>
+          <div class="contributor-bio">Controls logic, routes actions, and keeps the app flow clean and predictable.</div>
         </a>
       </div>
     </div>
