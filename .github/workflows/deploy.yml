@@ -20,20 +20,7 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            set -e
-
             cd /root/reporeply
-
-            echo "Pulling latest code..."
-            git pull origin main
-
-            echo "Installing dependencies..."
-            npm install --production
-
-            echo "Restarting app with PM2..."
-            pm2 restart reporeply --update-env
-
-            echo "Saving PM2 state..."
-            pm2 save
-
-            echo "Deployment completed successfully."
+            ls -la
+            chmod +x deploy.sh
+            ./deploy.sh
