@@ -79,5 +79,8 @@ cd reporeply
 
 ## Contributors
 
+<a href="https://github.com/x10developers/reporeply/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=x10developers/reporeply" />
+</a>
 <!-- ALL-CONTRIBUTORS-LIST:START -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
