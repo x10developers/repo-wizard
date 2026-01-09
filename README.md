@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="[./assets/banner.png](https://github.com/Coderxrohan/project-assets/blob/main/public/banner.png)" alt="Reporeply">
+  <img src="./assets/banner.png" alt="Reporeply">
 </p>
 
 
