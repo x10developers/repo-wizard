@@ -89,9 +89,9 @@ export const handleTelegramCommand = async (message) => {
       `• Sent reminders: ${sent}\n` +
       `• System uptime: ${Math.floor(Math.random() * 3) + 97}%\n\n` +
       `*Advanced Data*\n` +
-      `✅ Website: Live\n` +
-      `✅ Telegram Webhook: Up\n` +
-      `✅ GitHub App Webhook: OK\n\n` +
+      `• Website: Live\n` +
+      `• Telegram Webhook: Up\n` +
+      `• GitHub App Webhook: OK\n\n` +
       `Last check: ${new Date().toLocaleString()}`
     );
   }
