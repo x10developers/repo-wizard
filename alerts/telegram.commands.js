@@ -141,13 +141,18 @@ export const handleTelegramCommand = async (message) => {
 
     // Force send status update to channel bypassing scheduled time
     const success = await sendChannelMessage(
-      `*From Reporeply Team*\n` +
-        `• System uptime ${Math.floor(Math.random() * 3) + 97}%\n` +
-        `• Pending reminders: ${pending}\n` +
-        `• Sent reminders: ${sent}\n` +
-        `• Time: ${new Date().toLocaleDateString("en-US", {
-          weekday: "short",
-        })}, ${new Date().toLocaleTimeString("en-GB", { hour12: false })}`
+        "Application is running\n\n" +
+        `Server Health: Normal\n`
+        `Avilable Ram: 1 GB\n`
+        `CPU: Idle, no ongoing processes\n`
+        `Bandwidth: 500 GB Avilable\n`
+        `Scheduler: Running\n` +
+        `Server Type: Droplet\n`
+        `Provider: Digital Ocean\n`
+        `Hosting type: Cloud\n`
+        `Sever Public IP: 68.183.94.123\n`
+        `System: Ubuntu 24.04 (LTS) x64\n\n`
+        `Private IP: 10.122.0.2\n`
     );
 
     if (success) {
