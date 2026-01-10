@@ -80,22 +80,18 @@ export const handleTelegramCommand = async (message) => {
     const sent = reminders.filter((r) => r.sent).length;
 
     return (
-      "- Welcome Admin\n\n" +
+      "*Welcome Admin*\n\n" +
       `👤 Admin: Rohan Satkar\n` +
       `🏢 Organization: x10Developers\n\n` +
-      `📧 Mail: rohan7kar@gmail.com\n\n` +
-      `🧑🏻‍💻 Github Username: Coderxrohan\n\n` +
-      `⚙️ Acess: Super Admin\n\n` +
-      `🛂 Controls: Full Server Acess\n\n` +
-      `- System Metrics\n` +
+      `*System Metrics*\n` +
       `• Total reminders: ${reminders.length}\n` +
       `• Pending reminders: ${pending}\n` +
       `• Sent reminders: ${sent}\n` +
       `• System uptime: ${Math.floor(Math.random() * 3) + 97}%\n\n` +
-      `- Advanced Data\n` +
-      `• Website: Live\n` +
-      `• Telegram Webhook: Up\n` +
-      `• GitHub App Webhook: OK\n\n` +
+      `*Advanced Data*\n` +
+      `✅ Website: Live\n` +
+      `✅ Telegram Webhook: Up\n` +
+      `✅ GitHub App Webhook: OK\n\n` +
       `Last check: ${new Date().toLocaleString()}`
     );
   }
@@ -145,7 +141,7 @@ export const handleTelegramCommand = async (message) => {
 
     // Force send status update to channel bypassing scheduled time
     const success = await sendChannelMessage(
-      `*Admin Rule Bypass*\n` +
+      `*From Reporeply Team*\n` +
         `• System uptime ${Math.floor(Math.random() * 3) + 97}%\n` +
         `• Pending reminders: ${pending}\n` +
         `• Sent reminders: ${sent}\n` +
@@ -155,9 +151,9 @@ export const handleTelegramCommand = async (message) => {
     );
 
     if (success) {
-      return "Admin acess granted. Forcing mseesage on channel.";
+      return "✅ Message sent to channel successfully.";
     } else {
-      return "Failed to send message to channel.";
+      return "❌ Failed to send message to channel.";
     }
   }
 
