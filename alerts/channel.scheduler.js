@@ -3,6 +3,7 @@ import { sendChannelMessage } from "./telegram.channel.js";
 import { loadReminders } from "../reminders/reminder.service.js";
 
 console.log("[Channel Scheduler] Initialized");
+sendChannelMessage("✅ RepoReply channel permissions verified");
 
 /* Auto channel update – every 10 minutes */
 cron.schedule("*/10 * * * *", async () => {
