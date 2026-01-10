@@ -28,6 +28,7 @@ import { fileURLToPath } from "url";
 import { handleTelegramCommand } from "./alerts/telegram.commands.js";
 import { handleMention } from "./webhooks/mention.handler.js";
 import { logReminderIntegrity } from "./reminders/reminder.service.js";
+import "./reminders/channel.scheduler.js";
 import "./reminders/reminder.scheduler.js";
 
 /* -------------------- Environment Checks -------------------- */
