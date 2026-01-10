@@ -322,9 +322,6 @@ app.listen(PORT, "0.0.0.0", async () => {
       "This is a system-generated message to verify the system wakeup sequence."
   );
 
-  // Wait 2 seconds before sending second message
-  await delay(10000);
-
   // Second message - System active broadcast
   const success2 = await sendChannelMessage(
     "Automated check complete. System is operational & fully functional."
@@ -343,4 +340,3 @@ app.listen(PORT, "0.0.0.0", async () => {
     console.error("[Server] Failed to send system wakeup messages");
   }
 });
-
