@@ -1,15 +1,3 @@
-/**
- * File: telegram.alert.js
- *
- * Purpose:
- * - Sends critical alerts to Telegram.
- *
- * Notes:
- * - Uses built-in fetch (Node.js 18+)
- * - Never throws errors (alerts must not crash the app)
- * - Safe for production use
- */
-
 export async function sendTelegramAlert(message) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -19,10 +7,10 @@ export async function sendTelegramAlert(message) {
     return;
   }
 
-  const url = https://api.telegram.org/bot${token}/sendMessage;
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000); // 8s safety timeout
+  const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
     const response = await fetch(url, {
