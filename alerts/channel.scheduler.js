@@ -10,13 +10,18 @@ import { loadReminders } from "../reminders/reminder.service.js";
 // SYSTEM STARTUP NOTIFICATION
 // Sends a verification message when the system restarts/wakes up
 // ----------------------------------------------------------------------------
-sendChannelMessage(
-  "*System Startup Notification*\n\n" +
-  "This is a system-generated message to verify the system wakeup is working.\n\n" +
-  "RepoReply channel permissions verified and system is now active."
-)
-  .then(() => console.log("[Channel Scheduler] System wakeup message sent"))
-  .catch(err => console.error("[Channel Scheduler] Init error:", err));
+
+(async () => {
+  const success = await sendChannelMessage(
+    "*System Startup Notification*\n\n" +
+    "This is a system-generated message to verify the system wakeup is working.\n\n" +
+    "RepoReply channel permissions verified and system is now active."
+  );
+  
+  if (success) {
+    console.log("[Channel Scheduler] System wakeup message sent");
+  }
+})();
 
 // ----------------------------------------------------------------------------
 // PERIODIC STATUS UPDATE SCHEDULER
