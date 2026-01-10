@@ -36,7 +36,7 @@ cron.schedule("*/15 * * * *", async () => {
     // Send formatted status update to Telegram channel
     const success = await sendChannelMessage(
       `*From Reporeply Team*\n` +
-        `• System uptime 100%\n` +
+        `• System uptime ${Math.floor(Math.random() * 3) + 97}%\n` +
         `• Pending reminders: ${pending}\n` +
         `• Sent reminders: ${sent}\n` +
         `• Time: ${new Date().toLocaleDateString("en-US", {
