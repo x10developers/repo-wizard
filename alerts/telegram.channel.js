@@ -83,7 +83,7 @@ export async function sendChannelMessage(text) {
     if (!res.ok) {
       console.error("[Telegram Channel] API Error:", data);
     } else {
-      console.log("[Telegram Channel] ✅ Message sent successfully");
+      console.log("[Telegram Channel] Message sent successfully");
     }
   } catch (err) {
     console.error("[Telegram Channel] Error:", err.message);
