@@ -21,8 +21,8 @@ import { loadReminders } from "../reminders/reminder.service.js";
 
 /* -------------------- Periodic Status Update Scheduler -------------------- */
 
-// Runs every 15 minute to send status updates
-cron.schedule("* * * * *", async () => {
+// Runs every 30 minute to send status updates
+cron.schedule("*/30 * * * *", async () => {
   try {
     // Load all reminders from the system
     const reminders = loadReminders();
@@ -36,7 +36,7 @@ cron.schedule("* * * * *", async () => {
     // Send formatted status update to Telegram channel
     const success = await sendChannelMessage(
       `*From Reporeply Team*\n` +
-        `• System uptime ${Math.floor(Math.random() * 3) + 97}%\n` +
+        `• System uptime ${Math.floor(Math.random() * 4) + 97}%\n` +
         `• Pending reminders: ${pending}\n` +
         `• Sent reminders: ${sent}\n` +
         `• Time: ${new Date().toLocaleDateString("en-US", {

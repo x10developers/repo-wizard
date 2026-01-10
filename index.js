@@ -308,9 +308,7 @@ app.post("/cron/daily", async (req, res) => {
   }
 });
 
-/* -------------------- Server -------------------- */
-
-/* -------------------- Server -------------------- */
+/* -------------------- Server& Telgram Wakeup Message -------------------- */
 
 app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Server running on http://localhost:${PORT}`);
@@ -321,14 +319,22 @@ app.listen(PORT, "0.0.0.0", async () => {
   // First message - System startup notification
   const success1 = await sendChannelMessage(
     "*System Startup Notification*\n\n" +
-      "This is a system-generated message to verify the system wakeup is working."
+      "This is a system-generated message to verify the system wakeup sequence."
   );
 
   // Second message - System active broadcast
-  const success2 = await sendChannelMessage("Automated check complete. System is operational & fullu functional.");
+  const success2 = await sendChannelMessage("Automated check complete. System is operational & fully functional.");
 
   // Log if both messages were sent successfully
   if (success1 && success2) {
     console.log("[Server] System wakeup messages sent to Telegram");
+  }else {
+    // Send failure notification to Telegram
+    await sendChannelMessage(
+      "*System Startup Warning*\n\n" +
+        "Failed to send one or more startup messages.\n" +
+        "Please check system configuration."
+    );
+    console.error("[Server] Failed to send system wakeup messages");
   }
 });
