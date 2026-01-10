@@ -254,12 +254,12 @@ export const handleCallbackQuery = async (callbackQuery) => {
 
     if (success) {
       return {
-        text: "✅ Message sent to channel successfully.",
+        text: "Forced to send message on channel successfully.",
         answerCallback: "Message sent to channel"
       };
     } else {
       return {
-        text: "❌ Failed to send message to channel.",
+        text: "Failed to send message to channel. Admin rule out.",
         answerCallback: "Failed to send"
       };
     }
