@@ -15,6 +15,10 @@
 //     `⏰ *RepoReply Update*\nPending reminders: ${pending}`
 //   );
 // });
+console.log("[Group Debug]", {
+  enabled: process.env.TELEGRAM_GROUP_NOTIFICATIONS,
+  id: process.env.TELEGRAM_GROUP_ID
+});
 
 cron.schedule("*/10 * * * *", async () => {
   const reminders = loadReminders();
