@@ -5,22 +5,16 @@
  * - Background worker that delivers reminders when due.
  *
  * Responsibilities:
- * - Runs on a cron schedule.
- * - Loads pending reminders.
- * - Checks if reminder time has passed.
- * - Generates GitHub App installation tokens dynamically.
- * - Posts reminder comments on GitHub issues.
- * - Marks reminders as sent.
+ * - Delivers reminders on time
+ * - Sends hourly status updates
+ * - Sends daily summaries
+ * - Sends failure alerts via Telegram
  *
  * Metrics:
  * - scheduler.status
  * - reminders.checked
  * - reminders.sent
  * - reminders.failed
- *
- * Alerts:
- * - Telegram alert on reminder failure
- * - Daily summary at 06:00 and 23:00
  */
 
 import cron from "node-cron";
@@ -63,7 +57,7 @@ async function getInstallationOctokit(installationId) {
   return new Octokit({ auth: data.token });
 }
 
-/* -------------------- Alert Throttling -------------------- */
+/* -------------------- Failure Alert Throttling -------------------- */
 
 let lastFailureAlertAt = 0;
 
@@ -76,10 +70,9 @@ function canSendFailureAlert() {
   return false;
 }
 
-/* -------------------- Reminder Scheduler -------------------- */
-
+/* -------------------- Reminder Execution (EVERY 2 MINUTES) -------------------- */
 /**
- * Runs every 2 minutes (production-safe).
+ * DO NOT slow this down – reminders must be timely
  */
 cron.schedule("*/2 * * * *", async () => {
   console.log("[Metric] scheduler.status=running");
@@ -144,6 +137,25 @@ cron.schedule("*/2 * * * *", async () => {
   }
 });
 
+/* -------------------- Hourly Status Update (EVERY 1 HOUR) -------------------- */
+/**
+ * Lightweight health + activity update
+ */
+cron.schedule("0 * * * *", async () => {
+  const reminders = loadReminders();
+
+  const total = reminders.length;
+  const pending = reminders.filter((r) => !r.sent).length;
+
+  await sendTelegramAlert(
+    "RepoReply Hourly Status\n\n" +
+      `Total reminders: ${total}\n` +
+      `Pending reminders: ${pending}\n` +
+      `Scheduler heartbeat: OK\n` +
+      `Time: ${new Date().toLocaleString()}`
+  );
+});
+
 /* -------------------- Daily Summary Alerts -------------------- */
 
 async function sendDailySummary(label) {
@@ -166,8 +178,6 @@ async function sendDailySummary(label) {
  * Morning summary – 06:00
  */
 cron.schedule("0 6 * * *", async () => {
-  sendTelegramAlert("RepoReply test alert");
-
   await sendDailySummary("Morning");
 });
 
