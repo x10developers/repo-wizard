@@ -241,7 +241,7 @@ export const handleCallbackQuery = async (callbackQuery) => {
         `Hosting type: Cloud\n`
         `Sever Public IP: 68.183.94.123\n`
         `System: Ubuntu 24.04 (LTS) x64\n\n`
-        `Private IP: 10.122.0.2\n`
+        `Private IP: 10.122.0.2\n`,
       ),
       answerCallback: "Status loaded"
     };
