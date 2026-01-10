@@ -1,23 +1,13 @@
-/**
- * File: reminders/channel.scheduler.js
- *
- * Purpose:
- * - Dedicated scheduler for Telegram channel updates
- * - Sends hourly, morning, and night summaries
- * - Does NOT affect user notifications
- */
+import cron from "node-cron";
+import { sendChannelMessage } from "./telegram.channel.js";
+import { loadReminders } from "../reminders/reminder.service.js";
 
-const cron = require("node-cron");
-const { sendChannelMessage } = require("../alerts/telegram.channel");
-const { loadReminders } = require("./reminder.service");
+console.log("[Channel Scheduler] Initialized");
 
-/* ---------------- Hourly Update ---------------- */
-/* Runs every hour */
+/* Hourly update */
 cron.schedule("0 * * * *", async () => {
   try {
     const reminders = loadReminders();
-    if (!reminders || reminders.length === 0) return;
-
     const pending = reminders.filter(r => !r.sent).length;
     if (pending === 0) return;
 
@@ -29,28 +19,16 @@ cron.schedule("0 * * * *", async () => {
   }
 });
 
-/* ---------------- Morning Update ---------------- */
-/* Runs at 06:00 */
+/* Morning update */
 cron.schedule("0 6 * * *", async () => {
-  try {
-    await sendChannelMessage(
-      "🌅 *Good Morning!*\nRepoReply is actively monitoring repositories."
-    );
-  } catch (err) {
-    console.error("[Channel Scheduler][Morning]", err.message);
-  }
+  await sendChannelMessage(
+    "🌅 *Morning Update*\nRepoReply is actively monitoring repositories."
+  );
 });
 
-/* ---------------- Night Update ---------------- */
-/* Runs at 23:00 */
+/* Night update */
 cron.schedule("0 23 * * *", async () => {
-  try {
-    await sendChannelMessage(
-      "🌙 *Daily Wrap-up*\nAll scheduled checks completed successfully."
-    );
-  } catch (err) {
-    console.error("[Channel Scheduler][Night]", err.message);
-  }
+  await sendChannelMessage(
+    "🌙 *Night Update*\nAll scheduled checks completed."
+  );
 });
-
-console.log("[Channel Scheduler] Initialized");
