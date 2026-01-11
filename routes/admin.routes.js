@@ -1,16 +1,20 @@
 import express from "express";
-import { getAdminMetrics } from "../lib/adminMetrics.js";
+
+console.log("✅ admin.routes.js loaded");
+
+import metricsRoutes from "./admin/routes/metrics.routes.js";
+import trendsRoutes from "./admin/routes/trends.routes.js";
+import reposRoutes from "./admin/routes/repos.routes.js";
 
 const router = express.Router();
 
-router.get("/metrics", async (_req, res) => {
-  try {
-    const metrics = await getAdminMetrics();
-    res.json(metrics);
-  } catch (err) {
-    console.error("Admin metrics failed", err);
-    res.status(500).json({ error: "Failed to load metrics" });
-  }
-});
+// /admin/metrics
+router.use("/metrics", metricsRoutes);
+
+// /admin/trends
+router.use("/trends", trendsRoutes);
+
+// /admin/repos/:repoId
+router.use("/repos", reposRoutes);
 
 export default router;
