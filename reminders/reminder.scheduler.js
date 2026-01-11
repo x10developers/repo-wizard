@@ -1,189 +1,76 @@
 /**
- * File: reminder.scheduler.js
+ * File: reminders/reminder.scheduler.js
  *
  * Purpose:
- * - Background worker that delivers reminders when due.
+ * - Background worker to process due reminders from the database.
  *
- * Responsibilities:
- * - Delivers reminders on time
- * - Sends hourly status updates
- * - Sends daily summaries
- * - Sends failure alerts via Telegram
+ * Rules:
+ * - Only process reminders that are:
+ *   - status = "pending"
+ *   - sentAt IS NULL
+ *   - scheduledAt <= now
  *
- * Metrics:
- * - scheduler.status
- * - reminders.checked
- * - reminders.sent
- * - reminders.failed
+ * Notes:
+ * - Fully DB-based (no JSON)
+ * - Safe to run multiple times
+ * - Exits cleanly when nothing is due
  */
 
-import cron from "node-cron";
-import jwt from "jsonwebtoken";
-import fs from "fs";
-import { Octokit } from "@octokit/rest";
-import { loadReminders, saveReminders } from "./reminder.service.js";
-import { sendTelegramAlert } from "../alerts/telegram.alert.js";
+import "dotenv/config";
+import { prisma } from "../lib/prisma.js";
 
-/* -------------------- GitHub Auth Helpers -------------------- */
-
-function createAppJWT() {
-  const privateKey = fs.readFileSync(
-    process.env.GITHUB_PRIVATE_KEY_PATH,
-    "utf8"
-  );
-
-  const now = Math.floor(Date.now() / 1000);
-
-  return jwt.sign(
-    {
-      iat: now - 30,
-      exp: now + 540,
-      iss: Number(process.env.GITHUB_APP_ID),
-    },
-    privateKey,
-    { algorithm: "RS256" }
-  );
-}
-
-async function getInstallationOctokit(installationId) {
-  const appJWT = createAppJWT();
-  const appOctokit = new Octokit({ auth: appJWT });
-
-  const { data } = await appOctokit.request(
-    "POST /app/installations/{installation_id}/access_tokens",
-    { installation_id: installationId }
-  );
-
-  return new Octokit({ auth: data.token });
-}
-
-/* -------------------- Failure Alert Throttling -------------------- */
-
-let lastFailureAlertAt = 0;
-
-function canSendFailureAlert() {
-  const now = Date.now();
-  if (now - lastFailureAlertAt > 10 * 60 * 1000) {
-    lastFailureAlertAt = now;
-    return true;
-  }
-  return false;
-}
-
-/* -------------------- Reminder Execution (EVERY 2 MINUTES) -------------------- */
-/**
- * DO NOT slow this down – reminders must be timely
- */
-cron.schedule("*/2 * * * *", async () => {
+async function runScheduler() {
   console.log("[Metric] scheduler.status=running");
 
-  const reminders = loadReminders();
-  if (reminders.length === 0) return;
-
-  const pending = reminders.filter((r) => !r.sent);
-  console.log(`[Metric] reminders.checked=${pending.length}`);
-
   const now = new Date();
-  let updated = false;
 
-  for (const reminder of pending) {
-    // Safety guard
-    if (!reminder.installationId || !reminder.repo || !reminder.issue) {
-      reminder.sent = true;
-      updated = true;
-      continue;
-    }
-
-    if (new Date(reminder.remindAt) <= now) {
-      try {
-        const octokit = await getInstallationOctokit(reminder.installationId);
-        const [owner, repo] = reminder.repo.split("/");
-
-        await octokit.issues.createComment({
-          owner,
-          repo,
-          issue_number: reminder.issue,
-          body:
-            "Reminder notification.\n\n" +
-            `@${reminder.user}, you requested to be notified about this issue.`,
-        });
-
-        reminder.sent = true;
-        reminder.sentAt = new Date().toISOString();
-        updated = true;
-
-        console.log(
-          `[Metric] reminders.sent=1 repo=${owner}/${repo} issue=${reminder.issue}`
-        );
-      } catch (err) {
-        console.error(`[Metric] reminders.failed=1 error="${err.message}"`);
-
-        if (canSendFailureAlert()) {
-          await sendTelegramAlert(
-            "RepoReply Alert\n\n" +
-              "Reminder delivery failed.\n" +
-              `Repository: ${reminder.repo}\n` +
-              `Issue: #${reminder.issue}\n` +
-              `User: @${reminder.user}\n` +
-              `Error: ${err.message}`
-          );
-        }
+  const reminders = await prisma.reminder.findMany({
+    where: {
+      status: "pending",
+      sentAt: null,
+      scheduledAt: {
+        lte: now
       }
     }
+  });
+
+  console.log(`[Metric] reminders.checked=${reminders.length}`);
+
+  if (reminders.length === 0) {
+    console.log("[Metric] reminders.none_due");
+    return;
   }
 
-  if (updated) {
-    saveReminders(reminders);
+  for (const reminder of reminders) {
+    try {
+      // TODO (next phase):
+      // - Post GitHub comment
+      // - Send Telegram / Email / Slack notification
+
+      await prisma.reminder.update({
+        where: { id: reminder.id },
+        data: {
+          status: "sent",
+          sentAt: new Date()
+        }
+      });
+
+      console.log(
+        `[Metric] reminders.sent=1 repo=${reminder.repoId} issue=${reminder.issueNumber}`
+      );
+    } catch (err) {
+      console.error(
+        `[Error] reminder.failed id=${reminder.id}`,
+        err
+      );
+    }
   }
-});
-
-/* -------------------- Hourly Status Update (EVERY 1 HOUR) -------------------- */
-/**
- * Lightweight health + activity update
- */
-cron.schedule("0 * * * *", async () => {
-  const reminders = loadReminders();
-
-  const total = reminders.length;
-  const pending = reminders.filter((r) => !r.sent).length;
-
-  await sendTelegramAlert(
-    "RepoReply Hourly Status\n\n" +
-      `Total reminders: ${total}\n` +
-      `Pending reminders: ${pending}\n` +
-      `Scheduler heartbeat: OK\n` +
-      `Time: ${new Date().toLocaleString()}`
-  );
-});
-
-/* -------------------- Daily Summary Alerts -------------------- */
-
-async function sendDailySummary(label) {
-  const reminders = loadReminders();
-
-  const total = reminders.length;
-  const pending = reminders.filter((r) => !r.sent).length;
-  const sent = reminders.filter((r) => r.sent).length;
-
-  await sendTelegramAlert(
-    `RepoReply Daily Summary (${label})\n\n` +
-      `Total reminders: ${total}\n` +
-      `Pending reminders: ${pending}\n` +
-      `Sent reminders: ${sent}\n` +
-      `Timestamp: ${new Date().toLocaleString()}`
-  );
 }
 
-/**
- * Morning summary – 06:00
- */
-cron.schedule("0 6 * * *", async () => {
-  await sendDailySummary("Morning");
-});
-
-/**
- * Night summary – 23:00
- */
-cron.schedule("0 23 * * *", async () => {
-  await sendDailySummary("Night");
-});
+runScheduler()
+  .catch((err) => {
+    console.error("[Fatal] scheduler.crashed", err);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

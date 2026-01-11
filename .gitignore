@@ -10,3 +10,7 @@ node_modules/
 # Reminder data & backups
 data/reminders/
 data/reminders/*
+
+/generated/prisma
+
+/src/generated/prisma

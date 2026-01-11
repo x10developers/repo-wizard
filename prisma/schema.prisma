@@ -1,0 +1,83 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model ai_usage {
+  id           Int          @id @default(autoincrement())
+  repo_id      String
+  month        DateTime     @db.Date
+  used         Int?         @default(0)
+  limit_value  Int?         @default(200)
+  created_at   DateTime?    @default(now()) @db.Timestamp(6)
+  repositories repositories @relation(fields: [repo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([repo_id, month])
+  @@index([month], map: "idx_ai_usage_month")
+}
+
+model audit_logs {
+  id         Int       @id @default(autoincrement())
+  repo_id    String?
+  action     String
+  meta       Json?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model features {
+  key           String          @id
+  description   String
+  repo_features repo_features[]
+}
+
+model reminders {
+  id           String       @id
+  repo_id      String
+  issue_number Int
+  message      String?
+  scheduled_at DateTime     @db.Timestamp(6)
+  status       String?      @default("pending")
+  retry_count  Int?         @default(0)
+  error        String?
+  sent_at      DateTime?    @db.Timestamp(6)
+  created_at   DateTime?    @default(now()) @db.Timestamp(6)
+  repositories repositories @relation(fields: [repo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([scheduled_at], map: "idx_reminders_schedule")
+  @@index([status], map: "idx_reminders_status")
+}
+
+model repo_features {
+  repo_id      String
+  feature_key  String
+  enabled      Boolean?     @default(true)
+  features     features     @relation(fields: [feature_key], references: [key], onDelete: Cascade, onUpdate: NoAction)
+  repositories repositories @relation(fields: [repo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([repo_id, feature_key])
+}
+
+model repositories {
+  id            String          @id
+  full_name     String          @unique
+  owner_id      String
+  is_active     Boolean?        @default(true)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  ai_usage      ai_usage[]
+  reminders     reminders[]
+  repo_features repo_features[]
+  users         users           @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id           String         @id
+  username     String
+  type         String
+  created_at   DateTime?      @default(now()) @db.Timestamp(6)
+  repositories repositories[]
+}
