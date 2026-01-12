@@ -1,4 +1,6 @@
 // import { loadReminders } from "../reminders/reminder.service.js";
+import { prisma } from "../lib/prisma.js";
+
 import { sendChannelMessage } from "./telegram.channel.js";
 
 /* -------------------- Telegram Bot Command Handler -------------------- */
