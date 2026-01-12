@@ -19,7 +19,7 @@
 import dotenv from "dotenv";
 dotenv.config(); // MUST be first
 
-//new
+import cors from "cors";
 
 import adminRoutes from "./routes/admin.routes.js";
 
@@ -36,6 +36,9 @@ import { logReminderIntegrity } from "./reminders/reminder.service.js";
 import "./alerts/channel.scheduler.js";
 import "./reminders/reminder.scheduler.js";
 import "./alerts/group.scheduler.js";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 /* -------------------- Environment Checks -------------------- */
 if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -59,10 +62,25 @@ const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
 /* -------------------- App Setup -------------------- */
 
-const app = express();
+// const app = express();
+// app.use(express.json());
+// app.use("/admin", adminRoutes);
+// const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: "https://reporeply-frontend.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+app.use(express.json());
+
+
 app.use(express.json());
 app.use("/admin", adminRoutes);
-const PORT = process.env.PORT || 3000;
+
+
 
 /* -------------------- Health Check -------------------- */
 

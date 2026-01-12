@@ -5,22 +5,24 @@ export async function getAdminTrends(days = 7) {
   start.setDate(start.getDate() - days + 1);
   start.setHours(0, 0, 0, 0);
 
-  const raw = await prisma.reminders.groupBy({
-    // by: ["sent_at"],
-    //Fix in later
-    by: ["sentt"],
+  // Fetch all sent reminders in the date range
+  const reminders = await prisma.reminders.findMany({
     where: {
       status: "sent",
       sent_at: { gte: start }
     },
-    _count: { _all: true }
+    select: {
+      sent_at: true
+    }
   });
 
   // Map DB results → yyyy-mm-dd
   const map = {};
-  for (const row of raw) {
-    const d = row.sent_at.toISOString().slice(0, 10);
-    map[d] = (map[d] || 0) + row._count._all;
+  for (const reminder of reminders) {
+    if (reminder.sent_at) {
+      const d = reminder.sent_at.toISOString().slice(0, 10);
+      map[d] = (map[d] || 0) + 1;
+    }
   }
 
   // Fill missing days

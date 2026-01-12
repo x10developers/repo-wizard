@@ -1,7 +1,5 @@
 import express from "express";
 
-console.log("✅ admin.routes.js loaded");
-
 import metricsRoutes from "./admin/routes/metrics.routes.js";
 import trendsRoutes from "./admin/routes/trends.routes.js";
 import reposRoutes from "./admin/routes/repos.routes.js";
