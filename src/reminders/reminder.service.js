@@ -6,6 +6,7 @@
  */
 
 import { prisma } from "../lib/prisma.js";
+import crypto from "crypto";
 
 /* -------------------- Create Reminder -------------------- */
 
@@ -18,9 +19,9 @@ export async function createReminder({
 }) {
   return prisma.reminders.create({
     data: {
+      id: crypto.randomUUID(), // 🔑 REQUIRED because schema has no default
       repo_id,
       issue_number,
-      user,
       message,
       scheduled_at,
       status: "pending",
@@ -43,7 +44,6 @@ export async function hasRecentReminder({
     where: {
       repo_id,
       issue_number,
-      user,
       created_at: { gte: cutoff },
     },
   });
