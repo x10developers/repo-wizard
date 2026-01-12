@@ -1,4 +1,4 @@
-import { loadReminders } from "../reminders/reminder.service.js";
+// import { loadReminders } from "../reminders/reminder.service.js";
 import { sendChannelMessage } from "./telegram.channel.js";
 
 /* -------------------- Telegram Bot Command Handler -------------------- */
