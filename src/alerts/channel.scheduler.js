@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { sendChannelMessage } from "./telegram.channel.js";
-import { loadReminders } from "../reminders/reminder.service.js";
+import { prisma } from "../lib/prisma.js";
 
 /* -------------------- System Startup Notification -------------------- */
 
@@ -11,7 +11,7 @@ import { loadReminders } from "../reminders/reminder.service.js";
       "This is a system-generated message to verify the system wakeup is working.\n\n" +
       "RepoReply channel permissions verified and system is now active."
   );
-  
+
   if (success) {
     console.log("[Channel Scheduler] System wakeup message sent");
   } else {
@@ -21,24 +21,21 @@ import { loadReminders } from "../reminders/reminder.service.js";
 
 /* -------------------- Periodic Status Update Scheduler -------------------- */
 
-// Runs every 30 minute to send status updates
+// Runs every 30 minutes to send status updates
 cron.schedule("*/30 * * * *", async () => {
   try {
-    // Load all reminders from the system
+    // Fetch latest reminders from DB
     const reminders = await prisma.reminders.findMany({
-  orderBy: { created_at: "desc" },
-  take: 5,
-});
+      orderBy: { created_at: "desc" },
+      take: 5,
+    });
 
-    // Count pending reminders (not yet sent)
-    const pending = reminders.filter((r) => !r.sent).length;
+    // Count by status (DB-based, correct)
+    const pending = reminders.filter(r => r.status === "pending").length;
+    const sent = reminders.filter(r => r.status === "sent").length;
 
-    // Count completed reminders (already sent)
-    const sent = reminders.filter((r) => r.sent).length;
-
-    // Send formatted status update to Telegram channel
     const success = await sendChannelMessage(
-      `*From Reporeply Team*\n` +
+      `*From RepoReply Team*\n` +
         `• System uptime ${Math.floor(Math.random() * 4) + 97}%\n` +
         `• Pending reminders: ${pending}\n` +
         `• Sent reminders: ${sent}\n` +
@@ -47,7 +44,6 @@ cron.schedule("*/30 * * * *", async () => {
         })}, ${new Date().toLocaleTimeString("en-GB", { hour12: false })}`
     );
 
-    // Log only if message was sent successfully
     if (success) {
       console.log("[Channel Scheduler] Status update message sent");
     }
