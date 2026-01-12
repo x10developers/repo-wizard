@@ -38,3 +38,7 @@ echo "🩺 Health check (local)..."
 curl -f "http://127.0.0.1:$PORT/health"
 
 echo "✅ Deployment finished successfully"
+
+pm2 delete reporeply
+pm2 start src/index.js --name reporeply
+pm2 save

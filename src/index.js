@@ -68,7 +68,8 @@ const MS_IN_DAY = 24 * 60 * 60 * 1000;
 // const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: "https://reporeply-frontend.vercel.app",
+  origin:["https://reporeply.vercel.app",
+    "https://coderxrohan.engineer"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
