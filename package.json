@@ -4,7 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+      "dev": "node --watch src/index.js",
+      "start": "node src/index.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.59.3",

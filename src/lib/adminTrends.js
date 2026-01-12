@@ -6,7 +6,9 @@ export async function getAdminTrends(days = 7) {
   start.setHours(0, 0, 0, 0);
 
   const raw = await prisma.reminders.groupBy({
-    by: ["sent_at"],
+    // by: ["sent_at"],
+    //Fix in later
+    by: ["sentt"],
     where: {
       status: "sent",
       sent_at: { gte: start }

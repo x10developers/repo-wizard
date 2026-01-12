@@ -70,36 +70,6 @@ app.get("/", (req, res) => {
   res.status(200).send("RepoReply server is running");
 });
 
-/* -------------------- Static Pages -------------------- */
-
-app.get("/privacy-policy", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/privacy-policy.html"))
-);
-
-app.get("/contact-us", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/contact-us.html"))
-);
-
-app.get("/sitemap.xml", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/sitemap.xml"))
-);
-
-app.get("/coderxrohan", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/coderxrohan.html"))
-);
-
-app.get("/rohansatkar", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/rohansatkar.html"))
-);
-
-app.get("/robots.txt", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/robots.txt"))
-);
-
-app.get("/favicon.png", (req, res) =>
-  res.sendFile(path.join(__dirname, "nginx/favicon.png"))
-);
-
 /* -------------------- Auth Helpers -------------------- */
 
 function createAppJWT() {

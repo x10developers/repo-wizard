@@ -1,5 +1,5 @@
 import express from "express";
-import { getReminderTrends } from "../../../lib/adminTrends.js";
+import { getAdminTrends } from "../../../lib/adminTrends.js";
 
 const router = express.Router();
 
