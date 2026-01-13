@@ -12,7 +12,6 @@ import { startServer } from "../config/server.js";
 // Import schedulers (auto-run on import)
 import "./alerts/channel.scheduler.js";
 import "./reminders/reminder.scheduler.js";
-import "./alerts/group.scheduler.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
