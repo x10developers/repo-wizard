@@ -1,5 +1,5 @@
 /**
- * File: reminder.service.js
+ * File: reminder.service.js (FIXED VERSION)
  *
  * Purpose:
  * - Handles reminder persistence using Postgres (Prisma)
@@ -11,31 +11,44 @@ import crypto from "crypto";
 /* -------------------- Create Reminder -------------------- */
 
 export async function createReminder({
-  repo_id,
-  issue_number,
-  user,
-  message,
-  scheduled_at,
+  repo_id,      // ✅ Matches schema
+  issue_number, // ✅ Matches schema
+  message,      // ✅ Matches schema
+  scheduled_at, // ✅ Matches schema
 }) {
-  return prisma.reminders.create({
-    data: {
-      id: crypto.randomUUID(), // 🔑 REQUIRED because schema has no default
-      repo_id,
-      issue_number,
-      message,
-      scheduled_at,
-      status: "pending",
-      retry_count: 0,
-    },
+  console.log("[Debug] Creating reminder:", {
+    repo_id,
+    issue_number,
+    message,
+    scheduled_at,
   });
+
+  try {
+    const reminder = await prisma.reminders.create({
+      data: {
+        id: crypto.randomUUID(), // 🔒 REQUIRED because schema has no default
+        repo_id,
+        issue_number,
+        message,
+        scheduled_at,
+        status: "pending",
+        retry_count: 0,
+      },
+    });
+
+    console.log("[Success] Reminder created:", reminder.id);
+    return reminder;
+  } catch (error) {
+    console.error("[Error] Failed to create reminder:", error);
+    throw error; // Re-throw so handler can catch it
+  }
 }
 
 /* -------------------- Rate Limiting -------------------- */
 
 export async function hasRecentReminder({
-  repo_id,
-  issue_number,
-  user,
+  repo_id,      // ✅ Matches schema
+  issue_number, // ✅ Matches schema
   minutes = 5,
 }) {
   const cutoff = new Date(Date.now() - minutes * 60 * 1000);
@@ -48,6 +61,7 @@ export async function hasRecentReminder({
     },
   });
 
+  console.log(`[Debug] Rate limit check: found ${count} recent reminders`);
   return count > 0;
 }
 

@@ -1,5 +1,5 @@
 /**
- * File: mention.handler.js
+ * File: mention.handler.js (FIXED VERSION)
  *
  * Purpose:
  * - Handles RepoReply commands posted as issue comments.
@@ -103,10 +103,10 @@ export async function handleMention(payload, octokit) {
   /* -------------------- Rate Limit (10 minutes) -------------------- */
 
   if (!isAdminCommand) {
-    const limited = hasRecentReminder({
-      repo: payload.repository.full_name,
-      issue: payload.issue.number,
-      user: payload.sender.login,
+    // 🔧 FIX: Added await here!
+    const limited = await hasRecentReminder({
+      repo_id: payload.repository.full_name,  // 🔧 FIX: Changed to repo_id
+      issue_number: payload.issue.number,      // 🔧 FIX: Changed to issue_number
       minutes: 10,
     });
 
@@ -192,22 +192,35 @@ export async function handleMention(payload, octokit) {
 
   /* -------------------- Save Reminder -------------------- */
 
-  await createReminder({
-    repo: payload.repository.full_name,
-    issue: payload.issue.number,
-    user: payload.sender.login,
-    remindAt: parsed.remindAt,
-    installationId: payload.installation.id,
-  });
+  // 🔧 FIX: Corrected all field names to match schema
+  try {
+    await createReminder({
+      repo_id: payload.repository.full_name,      // ✅ Correct
+      issue_number: payload.issue.number,         // ✅ Correct
+      message: `Reminder for @${payload.sender.login}`, // ✅ Added default message
+      scheduled_at: parsed.remindAt,              // ✅ Correct field name
+    });
 
-  /* -------------------- Confirmation -------------------- */
+    /* -------------------- Confirmation -------------------- */
 
-  await octokit.issues.createComment({
-    owner: payload.repository.owner.login,
-    repo: payload.repository.name,
-    issue_number: payload.issue.number,
-    body:
-      "Reminder scheduled successfully.\n\n" +
-      `You will be notified here on ${parsed.remindAt.toLocaleString()}.`,
-  });
+    await octokit.issues.createComment({
+      owner: payload.repository.owner.login,
+      repo: payload.repository.name,
+      issue_number: payload.issue.number,
+      body:
+        "✅ Reminder scheduled successfully.\n\n" +
+        `You will be notified here on **${parsed.remindAt.toLocaleString()}**.`,
+    });
+  } catch (error) {
+    console.error("[Error] Failed to create reminder:", error);
+    
+    await octokit.issues.createComment({
+      owner: payload.repository.owner.login,
+      repo: payload.repository.name,
+      issue_number: payload.issue.number,
+      body:
+        "❌ Failed to create reminder.\n\n" +
+        "An error occurred while scheduling your reminder. Please try again.",
+    });
+  }
 }
