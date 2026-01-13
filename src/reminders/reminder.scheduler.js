@@ -1,43 +1,81 @@
 /**
- * File: reminder.scheduler.js (IMPROVED)
+ * File: reminder.scheduler.js (FIXED)
  *
- * Improvements:
- * - Better error categorization (transient vs permanent)
- * - Exponential backoff for retries
- * - Repository validation before sending
- * - Better metrics tracking
+ * Fixes:
+ * - Changed to GitHub App authentication (was using GITHUB_TOKEN)
+ * - Added proper JWT token generation
+ * - Better error handling
  */
 
 import "dotenv/config";
 import { prisma } from "../lib/prisma.js";
+import { Octokit } from "@octokit/rest";
+import jwt from "jsonwebtoken";
+
+/* --------------------------------------------- */
+/* GitHub App Authentication                     */
+/* --------------------------------------------- */
+async function getGitHubClient(repoFullName) {
+  // Generate JWT for GitHub App
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iat: now,
+    exp: now + 600, // 10 minutes
+    iss: process.env.GITHUB_APP_ID,
+  };
+
+  const token = jwt.sign(payload, process.env.GITHUB_PRIVATE_KEY, {
+    algorithm: "RS256",
+  });
+
+  // Get installation token
+  const appOctokit = new Octokit({ auth: token });
+  
+  // Get installation ID for this repository
+  const repo = await prisma.repositories.findUnique({
+    where: { id: repoFullName },
+    select: { installation_id: true },
+  });
+
+  if (!repo?.installation_id) {
+    throw new Error(`PERMANENT: No installation_id for repository ${repoFullName}`);
+  }
+
+  const { data: installation } = await appOctokit.apps.createInstallationAccessToken({
+    installation_id: repo.installation_id,
+  });
+
+  return new Octokit({ auth: installation.token });
+}
 
 /* --------------------------------------------- */
 /* GitHub delivery                               */
 /* --------------------------------------------- */
 async function postGitHubComment({ repo, issueNumber, message }) {
-  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}/comments`;
+  try {
+    const octokit = await getGitHubClient(repo);
+    const [owner, repoName] = repo.split("/");
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      Accept: "application/vnd.github+json",
-    },
-    body: JSON.stringify({ body: message }),
-  });
+    await octokit.issues.createComment({
+      owner,
+      repo: repoName,
+      issue_number: issueNumber,
+      body: message,
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-
+    return { success: true };
+  } catch (err) {
     // Check if it's a permanent error
-    if (res.status === 404 || res.status === 410) {
-      throw new Error(`PERMANENT: Issue not found or deleted (${res.status})`);
+    if (err.status === 404 || err.status === 410) {
+      throw new Error(`PERMANENT: Issue not found or deleted (${err.status})`);
+    }
+    
+    if (err.status === 401 || err.status === 403) {
+      throw new Error(`PERMANENT: Authentication failed (${err.status})`);
     }
 
-    throw new Error(`GitHub API failed: ${res.status} ${text}`);
+    throw err;
   }
-
-  return await res.json();
 }
 
 /* --------------------------------------------- */
@@ -70,10 +108,11 @@ async function notifyEmail(_text) {
 /* Metrics aggregation                           */
 /* --------------------------------------------- */
 async function sendDailyMetrics() {
-  const start = new Date();
+  const now = new Date();
+  const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
 
-  const end = new Date();
+  const end = new Date(now);
   end.setUTCHours(23, 59, 59, 999);
 
   const [sent, failed, dead, pending] = await Promise.all([
@@ -201,7 +240,7 @@ async function runScheduler() {
       );
     } catch (err) {
       const nextRetry = reminder.retry_count + 1;
-      const isPermanentError = err.message.includes("PERMANENT");
+      const isPermanentError = err.message && err.message.includes("PERMANENT");
       const isDead = nextRetry >= 5 || isPermanentError;
 
       const delayMinutes = getNextRetryDelay(nextRetry);

@@ -24,6 +24,8 @@ import { prisma } from "../lib/prisma.js";
 // Runs every 30 minutes to send status updates
 cron.schedule("*/30 * * * *", async () => {
   try {
+    const now = new Date(); // FIX: Define 'now' before using it
+
     // Fetch latest reminders from DB
     const reminders = await prisma.reminders.findMany({
       orderBy: { created_at: "desc" },
