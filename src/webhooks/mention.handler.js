@@ -8,6 +8,7 @@ import {
   createReminder,
   hasRecentReminder,
 } from "../reminders/reminder.service.js";
+import { ensureRepositoryExists } from "../utils/repository.helper.js";
 
 /**
  * Check whether a user is allowed to set reminders.
@@ -232,6 +233,24 @@ export async function handleMention(payload, octokit) {
     return;
   }
 
+  /* -------------------- Ensure Repository Exists -------------------- */
+
+  console.log("[Debug] Ensuring repository exists in database...");
+  try {
+    await ensureRepositoryExists(payload);
+  } catch (error) {
+    console.error("[Error] Failed to ensure repository exists:", error);
+    await octokit.issues.createComment({
+      owner: payload.repository.owner.login,
+      repo: payload.repository.name,
+      issue_number: payload.issue.number,
+      body:
+        "❌ Failed to initialize repository.\n\n" +
+        "Please contact the bot administrator.",
+    });
+    return;
+  }
+
   /* -------------------- Save Reminder -------------------- */
 
   const reminderData = {
@@ -239,6 +258,7 @@ export async function handleMention(payload, octokit) {
     issue_number: payload.issue.number,
     message: `🔔 Reminder for @${payload.sender.login}`,
     scheduled_at: parsed.remindAt,
+    created_by: payload.sender.login, // ✅ Track who created it
   };
 
   console.log("[Debug] Attempting to create reminder with data:", reminderData);

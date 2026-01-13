@@ -15,12 +15,14 @@ export async function createReminder({
   issue_number, // ✅ Matches schema
   message,      // ✅ Matches schema
   scheduled_at, // ✅ Matches schema
+  created_by,   // ✅ Track who created it
 }) {
   console.log("[Debug] Creating reminder:", {
     repo_id,
     issue_number,
     message,
     scheduled_at,
+    created_by,
   });
 
   try {
@@ -33,6 +35,7 @@ export async function createReminder({
         scheduled_at,
         status: "pending",
         retry_count: 0,
+        created_by,
       },
     });
 
