@@ -21,6 +21,8 @@ echo "🔁 Reloading Nginx..."
 nginx -t
 systemctl reload nginx
 
+npx prisma generate
+
 echo "♻️ Restarting Node app with PM2..."
 
 if pm2 list | grep -q "$APP_NAME"; then
