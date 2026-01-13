@@ -1,8 +1,3 @@
-
-// ================================================================
-// FILE 5: src/index.js (COMPLETE FILE)
-// ================================================================
-
 /**
  * File: index.js
  *
@@ -57,15 +52,20 @@ const __dirname = path.dirname(__filename);
 
 /* -------------------- Database Connection -------------------- */
 
-ensurePrismaConnection().catch((err) => {
+// Wait for database connection before running integrity checks
+await ensurePrismaConnection().catch((err) => {
   console.error('[Startup] Failed to connect to database:', err);
   process.exit(1);
 });
 
 /* -------------------- Startup Integrity -------------------- */
 
-logReminderIntegrity();
-
+// Run integrity check after connection is established
+try {
+  await logReminderIntegrity();
+} catch (err) {
+  console.error('[Startup] Integrity check failed:', err.message);
+}
 /* -------------------- Configuration -------------------- */
 
 const INACTIVITY_DAYS = 30;
