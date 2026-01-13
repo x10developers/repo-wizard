@@ -31,17 +31,20 @@ cron.schedule("*/30 * * * *", async () => {
     });
 
     // Count by status (DB-based, correct)
-    const pending = reminders.filter(r => r.status === "pending").length;
-    const sent = reminders.filter(r => r.status === "sent").length;
+    const pending = reminders.filter((r) => r.status === "pending").length;
+    const sent = reminders.filter((r) => r.status === "sent").length;
 
     const success = await sendChannelMessage(
       `*From RepoReply Team*\n` +
         `• System uptime ${Math.floor(Math.random() * 4) + 97}%\n` +
         `• Pending reminders: ${pending}\n` +
         `• Sent reminders: ${sent}\n` +
-        `• Time: ${new Date().toLocaleDateString("en-US", {
-          weekday: "short",
-        })}, ${new Date().toLocaleTimeString("en-GB", { hour12: false })}`
+        `${now.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        })}`
     );
 
     if (success) {

@@ -1,5 +1,3 @@
-import * as chrono from "chrono-node";
-
 /**
  * Parse natural-language reminder text.
  *
@@ -7,6 +5,7 @@ import * as chrono from "chrono-node";
  * - { remindAt: Date } on success
  * - null on failure
  */
+import * as chrono from "chrono-node";
 export function parseReminder(text) {
   if (!text || typeof text !== "string") return null;
 

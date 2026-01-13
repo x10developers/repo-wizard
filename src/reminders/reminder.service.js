@@ -11,11 +11,11 @@ import crypto from "crypto";
 /* -------------------- Create Reminder -------------------- */
 
 export async function createReminder({
-  repo_id,      // ✅ Matches schema
+  repo_id, // ✅ Matches schema
   issue_number, // ✅ Matches schema
-  message,      // ✅ Matches schema
+  message, // ✅ Matches schema
   scheduled_at, // ✅ Matches schema
-  created_by,   // ✅ Track who created it
+  created_by, // ✅ Track who created it
 }) {
   console.log("[Debug] Creating reminder:", {
     repo_id,
@@ -50,7 +50,7 @@ export async function createReminder({
 /* -------------------- Rate Limiting -------------------- */
 
 export async function hasRecentReminder({
-  repo_id,      // ✅ Matches schema
+  repo_id, // ✅ Matches schema
   issue_number, // ✅ Matches schema
   minutes = 5,
 }) {

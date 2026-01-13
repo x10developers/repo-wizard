@@ -28,15 +28,15 @@ async function postGitHubComment({ repo, issueNumber, message }) {
 
   if (!res.ok) {
     const text = await res.text();
-    
+
     // Check if it's a permanent error
     if (res.status === 404 || res.status === 410) {
       throw new Error(`PERMANENT: Issue not found or deleted (${res.status})`);
     }
-    
+
     throw new Error(`GitHub API failed: ${res.status} ${text}`);
   }
-  
+
   return await res.json();
 }
 
@@ -189,7 +189,7 @@ async function runScheduler() {
         data: {
           repo_id: reminder.repo_id,
           action: "REMINDER_SENT",
-          meta: { 
+          meta: {
             reminderId: reminder.id,
             issueNumber: reminder.issue_number,
           },
@@ -199,15 +199,14 @@ async function runScheduler() {
       console.log(
         `[Metric] reminders.sent=1 repo=${reminder.repo_id} issue=${reminder.issue_number}`
       );
-      
     } catch (err) {
       const nextRetry = reminder.retry_count + 1;
       const isPermanentError = err.message.includes("PERMANENT");
       const isDead = nextRetry >= 5 || isPermanentError;
 
       const delayMinutes = getNextRetryDelay(nextRetry);
-      const nextScheduledAt = isDead 
-        ? null 
+      const nextScheduledAt = isDead
+        ? null
         : new Date(Date.now() + delayMinutes * 60 * 1000);
 
       await prisma.reminders.update({
@@ -236,14 +235,16 @@ async function runScheduler() {
       });
 
       console.error(
-        `[Error] reminder.${isDead ? "dead" : "failed"} id=${reminder.id} retry=${nextRetry}`,
+        `[Error] reminder.${isDead ? "dead" : "failed"} id=${
+          reminder.id
+        } retry=${nextRetry}`,
         err.message
       );
     }
   }
 
   // Send metrics only once per day (check if already sent today)
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const lastMetricLog = await prisma.audit_logs.findFirst({
     where: {
       action: "DAILY_METRICS_SENT",
