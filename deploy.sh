@@ -17,9 +17,6 @@ git reset --hard origin/main
 echo "Installing filesystem codebase ..."
 npm install
 
-echo "Generating Prisma client..."
-npx prisma generate
-
 echo "Reloading Nginx..."
 nginx -t
 systemctl reload nginx
