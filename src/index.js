@@ -1,3 +1,8 @@
+
+// ================================================================
+// FILE 5: src/index.js (COMPLETE FILE)
+// ================================================================
+
 /**
  * File: index.js
  *
@@ -20,10 +25,6 @@ import dotenv from "dotenv";
 dotenv.config(); // MUST be first
 
 import cors from "cors";
-
-import adminRoutes from "./routes/admin.routes.js";
-
-//end
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -33,6 +34,10 @@ import { fileURLToPath } from "url";
 import { handleTelegramCommand } from "./alerts/telegram.commands.js";
 import { handleMention } from "./webhooks/mention.handler.js";
 import { logReminderIntegrity } from "./reminders/reminder.service.js";
+import { ensurePrismaConnection } from "./lib/prisma.js";
+import { asyncHandler } from "./utils/errors.js";
+import adminRoutes from "./routes/admin.routes.js";
+
 import "./alerts/channel.scheduler.js";
 import "./reminders/reminder.scheduler.js";
 import "./alerts/group.scheduler.js";
@@ -50,6 +55,13 @@ if (!process.env.TELEGRAM_BOT_TOKEN) {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/* -------------------- Database Connection -------------------- */
+
+ensurePrismaConnection().catch((err) => {
+  console.error('[Startup] Failed to connect to database:', err);
+  process.exit(1);
+});
+
 /* -------------------- Startup Integrity -------------------- */
 
 logReminderIntegrity();
@@ -62,30 +74,21 @@ const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
 /* -------------------- App Setup -------------------- */
 
-// const app = express();
-// app.use(express.json());
-// app.use("/admin", adminRoutes);
-// const PORT = process.env.PORT || 3000;
-
 app.use(cors({
-  origin:["https://reporeply.vercel.app",
-    "https://coderxrohan.engineer"],
+  origin: ["https://reporeply.vercel.app", "https://coderxrohan.engineer"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
 app.use(express.json());
-
-
-app.use(express.json());
 app.use("/admin", adminRoutes);
+
+/* -------------------- Health Check -------------------- */
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
-
-/* -------------------- Health Check -------------------- */
 
 app.get("/", (req, res) => {
   res.status(200).send("RepoReply server is running");
@@ -207,7 +210,7 @@ async function scanInactiveIssues(octokit, owner, repo) {
 
 /* -------------------- Webhook Handler -------------------- */
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", asyncHandler(async (req, res) => {
   const event = req.headers["x-github-event"];
   const action = req.body?.action;
 
@@ -215,32 +218,28 @@ app.post("/webhook", async (req, res) => {
     return res.sendStatus(200);
   }
 
-  try {
-    const installationId = req.body.installation?.id;
-    if (!installationId) return res.sendStatus(200);
+  const installationId = req.body.installation?.id;
+  if (!installationId) return res.sendStatus(200);
 
-    const octokit = await getInstallationOctokit(installationId);
+  const octokit = await getInstallationOctokit(installationId);
 
-    if (event === "issue_comment" && action === "created") {
-      await handleMention(req.body, octokit);
-    }
+  if (event === "issue_comment" && action === "created") {
+    await handleMention(req.body, octokit);
+  }
 
-    if (event === "issues" && action === "opened") {
-      await octokit.issues.createComment({
-        owner: req.body.repository.owner.login,
-        repo: req.body.repository.name,
-        issue_number: req.body.issue.number,
-        body:
-          "Thank you for opening this issue. " +
-          "We have started monitoring this issue.",
-      });
-    }
-  } catch (err) {
-    console.error("Webhook failed:", err.message);
+  if (event === "issues" && action === "opened") {
+    await octokit.issues.createComment({
+      owner: req.body.repository.owner.login,
+      repo: req.body.repository.name,
+      issue_number: req.body.issue.number,
+      body:
+        "Thank you for opening this issue. " +
+        "We have started monitoring this issue.",
+    });
   }
 
   res.sendStatus(200);
-});
+}));
 
 /* -------------------- Telegram Bot Webhook -------------------- */
 
@@ -273,38 +272,65 @@ app.post(
     }
   }
 );
-``;
+
 /* -------------------- Daily Cron Endpoint -------------------- */
 
-app.post("/cron/daily", async (req, res) => {
-  try {
-    const appJWT = createAppJWT();
-    const appOctokit = new Octokit({ auth: appJWT });
+app.post("/cron/daily", asyncHandler(async (req, res) => {
+  const appJWT = createAppJWT();
+  const appOctokit = new Octokit({ auth: appJWT });
 
-    const { data: installations } = await appOctokit.request(
-      "GET /app/installations"
+  const { data: installations } = await appOctokit.request(
+    "GET /app/installations"
+  );
+
+  for (const installation of installations) {
+    const octokit = await getInstallationOctokit(installation.id);
+    const repos = await octokit.paginate(
+      octokit.apps.listReposAccessibleToInstallation,
+      { per_page: 100 }
     );
 
-    for (const installation of installations) {
-      const octokit = await getInstallationOctokit(installation.id);
-      const repos = await octokit.paginate(
-        octokit.apps.listReposAccessibleToInstallation,
-        { per_page: 100 }
-      );
-
-      for (const repo of repos) {
-        await scanInactiveIssues(octokit, repo.owner.login, repo.name);
-      }
+    for (const repo of repos) {
+      await scanInactiveIssues(octokit, repo.owner.login, repo.name);
     }
-
-    res.send("Daily inactivity scan completed");
-  } catch (err) {
-    console.error("Daily cron failed:", err.message);
-    res.sendStatus(500);
   }
+
+  res.send("Daily inactivity scan completed");
+}));
+
+/* -------------------- Global Error Handler -------------------- */
+
+app.use((error, req, res, next) => {
+  console.error('[Error Handler]', {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  });
+
+  const statusCode = error.statusCode || 500;
+  const message = error.isOperational 
+    ? error.message 
+    : 'An unexpected error occurred';
+
+  res.status(statusCode).json({
+    error: {
+      message,
+      timestamp: error.timestamp || new Date().toISOString(),
+    },
+  });
 });
 
-/* -------------------- Server& Telgram Wakeup Message -------------------- */
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection]', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[Uncaught Exception]', error);
+  process.exit(1);
+});
+
+/* -------------------- Server & Telegram Wakeup Message -------------------- */
 
 app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Server running on http://localhost:${PORT}`);

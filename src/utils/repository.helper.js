@@ -1,9 +1,10 @@
-/**
- * Auto-create repository and user if they don't exist
- * Add this to your mention.handler.js
- */
+
+// ================================================================
+// FILE 3: src/utils/repository.helper.js
+// ================================================================
 
 import { prisma } from "../lib/prisma.js";
+import { safeDbOperation } from "./errors.js";
 
 /**
  * Ensure repository exists in database
@@ -12,11 +13,11 @@ import { prisma } from "../lib/prisma.js";
 export async function ensureRepositoryExists(payload) {
   const repoFullName = payload.repository.full_name;
   const owner = payload.repository.owner.login;
-  const ownerType = payload.repository.owner.type.toLowerCase(); // 'user' or 'organization'
+  const ownerType = payload.repository.owner.type.toLowerCase();
 
-  console.log(`[Repository] Checking if ${repoFullName} exists...`);
+  console.log(`[Repository] Ensuring ${repoFullName} exists...`);
 
-  try {
+  return await safeDbOperation(async () => {
     // Check if repo exists
     const existing = await prisma.repositories.findUnique({
       where: { id: repoFullName },
@@ -27,41 +28,40 @@ export async function ensureRepositoryExists(payload) {
       return existing;
     }
 
-    console.log(`[Repository] Repository not found, creating...`);
+    console.log(`[Repository] Creating new repository...`);
 
-    // Step 1: Ensure user/org exists
-    await prisma.users.upsert({
-      where: { id: owner },
-      update: {
-        username: owner,
-        type: ownerType,
-      },
-      create: {
-        id: owner,
-        username: owner,
-        type: ownerType,
-        created_at: new Date(),
-      },
-    });
+    // Use transaction for atomic user + repo creation
+    const result = await prisma.$transaction(async (tx) => {
+      // Ensure user/org exists
+      await tx.users.upsert({
+        where: { id: owner },
+        update: {
+          username: owner,
+          type: ownerType,
+        },
+        create: {
+          id: owner,
+          username: owner,
+          type: ownerType,
+          created_at: new Date(),
+        },
+      });
 
-    console.log(`[Repository] ✅ User/org ensured: ${owner}`);
+      // Create repository
+      const repo = await tx.repositories.create({
+        data: {
+          id: repoFullName,
+          full_name: repoFullName,
+          owner_id: owner,
+          is_active: true,
+          created_at: new Date(),
+        },
+      });
 
-    // Step 2: Create repository
-    const repo = await prisma.repositories.create({
-      data: {
-        id: repoFullName,
-        full_name: repoFullName,
-        owner_id: owner,
-        is_active: true,
-        created_at: new Date(),
-      },
+      return repo;
     });
 
     console.log(`[Repository] ✅ Repository created: ${repoFullName}`);
-    return repo;
-
-  } catch (error) {
-    console.error(`[Repository] ❌ Failed to ensure repository:`, error);
-    throw error;
-  }
+    return result;
+  });
 }
