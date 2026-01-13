@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/errors.js";
+import { asyncHandler } from "../src/utils/errors.js";
 import { getInstallationOctokit } from "../services/github.service.js";
 import { handleMention } from "../webhooks/mention.handler.js";
 import { handleTelegramCommand } from "../alerts/telegram.commands.js";
