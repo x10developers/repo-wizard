@@ -28,6 +28,7 @@ async function ensurePrismaConnection() {
       console.log('[Prisma] ✅ Database connected');
     } catch (error) {
       console.error('[Prisma] ❌ Connection failed:', error.message);
+      isConnected = false;
       throw error;
     } finally {
       connectionPromise = null;
@@ -37,11 +38,30 @@ async function ensurePrismaConnection() {
   await connectionPromise;
 }
 
+/**
+ * Reset connection flag (for when connection is lost)
+ */
+export function resetConnection() {
+  isConnected = false;
+  connectionPromise = null;
+}
+
 // Auto-connect on import
 ensurePrismaConnection();
 
+// Handle disconnection
+prisma.$on('beforeExit', async () => {
+  isConnected = false;
+});
+
 // Graceful shutdown
 process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+  isConnected = false;
+});
+
+// Reconnect on SIGTERM
+process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   isConnected = false;
 });

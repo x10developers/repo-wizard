@@ -81,27 +81,49 @@ export async function withRetry(
 }
 
 /**
- * Safe database operation wrapper
+ * Safe database operation wrapper with auto-reconnect
  */
 export async function safeDbOperation(operation, fallbackValue = null) {
-  const { ensurePrismaConnection } = await import("../lib/prisma.js");
+  const { ensurePrismaConnection, resetConnection } = await import("../lib/prisma.js");
   
-  try {
-    await ensurePrismaConnection();
-    return await operation();
-  } catch (error) {
-    console.error('[DB Error]', error.message);
-    
-    if (error.code === 'P2002') {
-      throw new ValidationError('Resource already exists');
+  let retries = 3;
+  let lastError;
+  
+  while (retries > 0) {
+    try {
+      await ensurePrismaConnection();
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      
+      // If connection error, reset and retry
+      if (error.message?.includes('Engine is not yet connected') || 
+          error.message?.includes('Response from the Engine was empty') ||
+          error.message?.includes('Connection is not yet established')) {
+        retries--;
+        if (retries > 0) {
+          console.log(`[DB] Connection lost, retrying... (${retries} attempts left)`);
+          resetConnection(); // Reset connection flag
+          await new Promise(resolve => setTimeout(resolve, 500));
+          continue;
+        }
+      }
+      
+      // Handle specific Prisma errors
+      if (error.code === 'P2002') {
+        throw new ValidationError('Resource already exists');
+      }
+      if (error.code === 'P2025') {
+        throw new ValidationError('Resource not found');
+      }
+      if (error.code === 'P2003') {
+        throw new ValidationError('Foreign key constraint failed');
+      }
+      
+      break;
     }
-    if (error.code === 'P2025') {
-      throw new ValidationError('Resource not found');
-    }
-    if (error.code === 'P2003') {
-      throw new ValidationError('Foreign key constraint failed');
-    }
-    
-    throw new DatabaseError('Database operation failed', error);
   }
+  
+  console.error('[DB Error]', lastError.message);
+  throw new DatabaseError('Database operation failed', lastError);
 }
