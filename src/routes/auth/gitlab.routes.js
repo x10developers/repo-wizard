@@ -5,7 +5,7 @@ import {
   getGitLabAuthUrl,
   exchangeGitLabCode,
   getGitLabUser
-} from "../../services/gitlab.service.js";
+} from "../../../services/gitlab.service.js";
 import { prisma } from "../../lib/prisma.js";
 
 const router = express.Router();
