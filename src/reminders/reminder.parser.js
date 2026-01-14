@@ -7,7 +7,7 @@
  */
 import * as chrono from "chrono-node";
 
-export function parseReminder(text) {
+export function parseReminder(text, referenceDate = new Date()) {
   if (!text || typeof text !== "string") return null;
 
   const normalized = text.toLowerCase();
@@ -23,8 +23,7 @@ export function parseReminder(text) {
 
   /* -------------------- Time Extraction -------------------- */
 
-  const now = new Date();
-  const date = chrono.parseDate(normalized, now, {
+  const date = chrono.parseDate(normalized, referenceDate, {
     forwardDate: true, // always future dates
   });
 
@@ -39,8 +38,8 @@ export function parseReminder(text) {
     return null;
   }
 
-  // Ensure the date is actually in the future (at least 1 second from now)
-  if (date.getTime() <= Date.now()) {
+  // Ensure the date is actually in the future relative to reference date
+  if (date.getTime() <= referenceDate.getTime()) {
     return null;
   }
 

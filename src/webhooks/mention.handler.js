@@ -207,8 +207,12 @@ async function handleGitHubMention(payload, octokit) {
       .replace(/^\/reporeply/i, "")
       .trim();
 
-    // Parse Reminder
-    const parsed = parseReminder(commandText);
+    // Get single timestamp for consistency
+    const now = Date.now();
+    const nowDate = new Date(now);
+
+    // Parse Reminder with reference date
+    const parsed = parseReminder(commandText, nowDate);
 
     if (!parsed) {
       throw new ValidationError(
@@ -224,7 +228,6 @@ async function handleGitHubMention(payload, octokit) {
     // Minimum Reminder Time (15 minutes)
     const MIN_DELAY_MINUTES = 16;
     const DISPLAY_MINUTES = 15;
-    const now = Date.now();
     const remindAtTime = new Date(parsed.remindAt).getTime();
     const minAllowedTime = now + MIN_DELAY_MINUTES * 60 * 1000;
 
@@ -369,8 +372,12 @@ async function handleGitLabMention(payload, accessToken) {
       .replace(/^\/reporeply/i, "")
       .trim();
 
-    // Parse Reminder
-    const parsed = parseReminder(commandText);
+    // Get single timestamp for consistency
+    const now = Date.now();
+    const nowDate = new Date(now);
+
+    // Parse Reminder with reference date
+    const parsed = parseReminder(commandText, nowDate);
 
     if (!parsed) {
       throw new ValidationError(
@@ -386,7 +393,6 @@ async function handleGitLabMention(payload, accessToken) {
     // Minimum Reminder Time (15 minutes)
     const MIN_DELAY_MINUTES = 16;
     const DISPLAY_MINUTES = 15;
-    const now = Date.now();
     const remindAtTime = new Date(parsed.remindAt).getTime();
     const minAllowedTime = now + MIN_DELAY_MINUTES * 60 * 1000;
 
