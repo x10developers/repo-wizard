@@ -49,11 +49,7 @@ export function extractCommandText(body) {
 /**
  * Check rate limiting for reminder creation
  */
-export async function checkRateLimiting({
-  repo_id,
-  issue_number,
-  minutes = 10,
-}) {
+export async function checkRateLimiting({ repo_id, issue_number, minutes = 10 }) {
   try {
     const limited = await hasRecentReminder({
       repo_id,
@@ -78,8 +74,11 @@ export async function checkRateLimiting({
 
 /**
  * Parse and validate reminder from command text
+ * Returns: { parsed, now } where now is the timestamp used for parsing
  */
-export function parseAndValidateReminder(commandText, now = Date.now()) {
+export function parseAndValidateReminder(commandText) {
+  // Get timestamp ONCE and use it for everything
+  const now = Date.now();
   const nowDate = new Date(now);
 
   // Parse the reminder
@@ -96,13 +95,15 @@ export function parseAndValidateReminder(commandText, now = Date.now()) {
     );
   }
 
+  // Return both parsed result and the timestamp we used
   return { parsed, now };
 }
 
 /**
  * Validate reminder time constraints
+ * IMPORTANT: Must use the same 'now' timestamp that was used for parsing
  */
-export function validateReminderTime(remindAt, now = Date.now()) {
+export function validateReminderTime(remindAt, now) {
   const MIN_DELAY_MINUTES = 16;
   const DISPLAY_MINUTES = 15;
   const MAX_DAYS_AHEAD = 8;
@@ -139,10 +140,10 @@ export async function validateReminder({
   issue_number,
   skipRateLimit = false,
 }) {
-  // Parse reminder
+  // Parse reminder (gets timestamp internally)
   const { parsed, now } = parseAndValidateReminder(commandText);
 
-  // Validate time constraints
+  // Validate time constraints using the SAME timestamp
   validateReminderTime(parsed.remindAt, now);
 
   // Check rate limiting
