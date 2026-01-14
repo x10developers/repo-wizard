@@ -1,5 +1,5 @@
 import express from "express";
-import { handleMention } from "../../webhooks/mention.handler.js";
+import { handleMention } from "../../webhooks/mention/index.js";
 import { 
   validateGitLabWebhook,
   getGitLabAuthUrl,
