@@ -3,7 +3,7 @@
  * Routes requests to GitHub or GitLab handlers
  */
 
-import { handleGitHubMention } from "../mention/github.handler.js";
+import { handleGitHubMention } from "./github.handler.js";
 import { handleGitLabMention } from "./gitlab.handler.js";
 
 /**

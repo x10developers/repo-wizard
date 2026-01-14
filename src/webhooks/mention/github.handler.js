@@ -15,14 +15,14 @@ import {
 } from "./validation.js";
 
 /**
- * Handle RepoReply commands from GitLab issue comments
+ * Handle RepoReply commands from GitHub issue comments
  */
-export async function handleGitLabMention(payload, accessToken) {
+export async function handleGitHubMention(payload, octokit) {
   console.log(
-    `\n[GitLab Mention] Processing: ${payload.project.path_with_namespace}#${payload.object_attributes.iid}`
+    `\n[GitHub Mention] Processing: ${payload.repository.full_name}#${payload.issue.number}`
   );
 
-  const body = payload.object_attributes?.note;
+  const body = payload.comment?.body;
   if (!body) return;
 
   // Check if this is a valid command
@@ -34,14 +34,15 @@ export async function handleGitLabMention(payload, accessToken) {
 
   try {
     // Permission Check
-    const allowed = await checkGitLabPermissions(payload, accessToken);
+    const allowed = await checkGitHubPermissions(payload, octokit);
 
     if (!allowed) {
-      await sendGitLabErrorComment(
+      await sendGitHubErrorComment(
+        octokit,
         payload,
         "❌ Reminder not created.\n\n" +
-          "Only the issue author, project members, or contributors are permitted to create reminders for this issue.",
-        accessToken
+          "Only the issue author, repository collaborators, organization members, " +
+          "or prior contributors are permitted to create reminders for this issue."
       );
       return;
     }
@@ -52,26 +53,21 @@ export async function handleGitLabMention(payload, accessToken) {
     // Validate reminder (includes rate limiting check)
     const parsed = await validateReminder({
       commandText,
-      repo_id: payload.project.path_with_namespace,
-      issue_number: payload.object_attributes.iid,
+      repo_id: payload.repository.full_name,
+      issue_number: payload.issue.number,
       skipRateLimit: isAdmin,
     });
 
-    // Ensure Repository Exists (GitLab format)
-    await ensureRepositoryExists({
-      repository: {
-        full_name: payload.project.path_with_namespace,
-        owner: { login: payload.project.namespace },
-      },
-    });
+    // Ensure Repository Exists
+    await ensureRepositoryExists(payload);
 
     // Save Reminder with Retry
     const reminderData = {
-      repo_id: payload.project.path_with_namespace,
-      issue_number: payload.object_attributes.iid,
-      message: `🔔 Reminder for @${payload.user.username}`,
+      repo_id: payload.repository.full_name,
+      issue_number: payload.issue.number,
+      message: `🔔 Reminder for @${payload.sender.login}`,
       scheduled_at: parsed.remindAt,
-      created_by: payload.user.username,
+      created_by: payload.sender.login,
     };
 
     const reminder = await withRetry(
@@ -80,23 +76,16 @@ export async function handleGitLabMention(payload, accessToken) {
       1000
     );
 
-    console.log(`[GitLab Mention] ✅ Reminder created: ${reminder.id}`);
+    console.log(`[GitHub Mention] ✅ Reminder created: ${reminder.id}`);
 
-    // Send confirmation comment with ISO format and relative time
-    const reminderDate = new Date(parsed.remindAt);
-    const now = new Date();
-    const minutesUntil = Math.round((reminderDate - now) / 60000);
-
-    await sendGitLabComment(
+    // Send confirmation comment
+    await sendGitHubComment(
+      octokit,
       payload,
-      `Got it. I will remind you in **${minutesUntil} minutes** (at **${reminderDate
-        .toISOString()
-        .replace("T", " ")
-        .slice(0, 19)} UTC**).`,
-      accessToken
+      `Got it. I will remind you on **${parsed.remindAt.toLocaleString()}**.`
     );
   } catch (error) {
-    console.error("[GitLab Mention] ❌ Error:", {
+    console.error("[GitHub Mention] ❌ Error:", {
       name: error.name,
       message: error.message,
     });
@@ -114,6 +103,6 @@ export async function handleGitLabMention(payload, accessToken) {
         "An unexpected error occurred. Please contact support if this persists.";
     }
 
-    await sendGitLabErrorComment(payload, userMessage, accessToken);
+    await sendGitHubErrorComment(octokit, payload, userMessage);
   }
 }
