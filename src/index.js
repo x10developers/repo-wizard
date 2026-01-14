@@ -8,9 +8,6 @@ import { setupMiddleware } from "../config/middleware.js";
 import { setupRoutes } from "../config/routes.js";
 import { setupErrorHandlers } from "../config/errorHandlers.js";
 import { startServer } from "../config/server.js";
-import gitlabRoutes from "./src/routes/auth/gitlab.routes.js";
-
-app.use("/gitlab", gitlabRoutes);
 
 // Import schedulers (auto-run on import)
 import "./alerts/channel.scheduler.js";
@@ -26,7 +23,7 @@ if (!process.env.TELEGRAM_BOT_TOKEN) {
 
 /* -------------------- Database Connection -------------------- */
 await ensurePrismaConnection().catch((err) => {
-  console.error('[Startup] Failed to connect to database:', err);
+  console.error("[Startup] Failed to connect to database:", err);
   process.exit(1);
 });
 
@@ -34,7 +31,7 @@ await ensurePrismaConnection().catch((err) => {
 try {
   await logReminderIntegrity();
 } catch (err) {
-  console.error('[Startup] Integrity check failed:', err.message);
+  console.error("[Startup] Integrity check failed:", err.message);
 }
 
 /* -------------------- App Setup -------------------- */

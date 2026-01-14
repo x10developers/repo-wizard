@@ -3,6 +3,7 @@ import { getInstallationOctokit } from "../services/github.service.js";
 import { handleMention } from "../src/webhooks/mention.handler.js";
 import { handleTelegramCommand } from "../src/alerts/telegram.commands.js";
 import { handleDailyCron } from "../services/cron.service.js";
+import gitlabRoutes from "../src/routes/auth/gitlab.routes.js";
 
 export function setupRoutes(app) {
   // Health checks
@@ -32,7 +33,11 @@ export function setupRoutes(app) {
       const octokit = await getInstallationOctokit(installationId);
 
       if (event === "issue_comment" && action === "created") {
-        await handleMention(req.body, octokit);
+        await handleMention({
+          provider: "github",
+          payload: req.body,
+          octokit,
+        });
       }
 
       if (event === "issues" && action === "opened") {
@@ -49,6 +54,11 @@ export function setupRoutes(app) {
       res.sendStatus(200);
     })
   );
+
+  /* -------------------- GitLab Routes -------------------- */
+
+  app.use("/gitlab", gitlabRoutes);
+  app.use("/auth/gitlab", gitlabRoutes);
 
   /* -------------------- Telegram webhook -------------------- */
 
