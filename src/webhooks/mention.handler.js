@@ -1,10 +1,10 @@
-import { parseReminder } from "../../reminders/reminder.parser.js";
+import { parseReminder } from "../reminders/reminder.parser.js";
 import {
   createReminder,
   hasRecentReminder,
-} from "../../reminders/reminder.service.js";
-import { ensureRepositoryExists } from "../../utils/repository.helper.js";
-import { ValidationError, withRetry } from "../../utils/errors.js";
+} from "../reminders/reminder.service.js";
+import { ensureRepositoryExists } from "../utils/repository.helper.js";
+import { ValidationError, withRetry } from "../utils/errors.js";
 import {
   postGitLabComment,
   hasGitLabPermission,
