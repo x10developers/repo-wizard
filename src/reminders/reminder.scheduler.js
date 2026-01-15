@@ -18,7 +18,6 @@ import path from "path";
 /* --------------------------------------------- */
 /* GitHub App Authentication                     */
 /* --------------------------------------------- */
-
 async function getGitHubClient(repoFullName) {
   // ✅ Get installation_id from database FIRST
   const repo = await prisma.repositories.findUnique({
@@ -26,16 +25,8 @@ async function getGitHubClient(repoFullName) {
     select: { installation_id: true },
   });
 
-  // 🔍 ADD THESE DEBUG LINES:
-  console.log(`[Scheduler] DEBUG - Full repo object:`, JSON.stringify(repo));
-  console.log(
-    `[Scheduler] DEBUG - installation_id value:`,
-    repo?.installation_id
-  );
-  console.log(
-    `[Scheduler] DEBUG - installation_id type:`,
-    typeof repo?.installation_id
-  );
+  console.log(`[DEBUG] Repo:`, repo);
+  console.log(`[DEBUG] installation_id:`, repo?.installation_id);
 
   if (!repo?.installation_id) {
     throw new Error(
@@ -51,13 +42,11 @@ async function getGitHubClient(repoFullName) {
   let privateKey;
 
   if (process.env.GITHUB_PRIVATE_KEY_PATH) {
-    // Resolve relative path from project root
     const keyPath = path.resolve(
       process.cwd(),
       process.env.GITHUB_PRIVATE_KEY_PATH
     );
     console.log(`[Scheduler] Reading private key from: ${keyPath}`);
-
     privateKey = fs.readFileSync(keyPath, "utf8");
     console.log("[Scheduler] ✅ Private key loaded from file");
   } else if (process.env.GITHUB_PRIVATE_KEY) {
@@ -86,7 +75,7 @@ async function getGitHubClient(repoFullName) {
 
   const { data: installation } =
     await appOctokit.apps.createInstallationAccessToken({
-      installation_id: repo.installation_id,
+      installation_id: parseInt(repo.installation_id, 10), // ✅ Force to integer
     });
 
   return new Octokit({ auth: installation.token });
@@ -285,7 +274,7 @@ async function runScheduler() {
     } catch (err) {
       const nextRetry = reminder.retry_count + 1;
       const isPermanentError = err.message && err.message.includes("PERMANENT");
-      const isDead = nextRetry >= 5 || isPermanentError;
+      const isDead = (nextRetry >= 3 && isPermanentError) || nextRetry >= 5;
 
       const delayMinutes = getNextRetryDelay(nextRetry);
       const nextScheduledAt = isDead
@@ -349,11 +338,17 @@ async function runScheduler() {
 /* --------------------------------------------- */
 /* Entrypoint                                    */
 /* --------------------------------------------- */
-runScheduler()
-  .catch((err) => {
-    console.error("[Fatal] scheduler.crashed", err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+
+// ✅ Add startup delay to avoid race conditions
+console.log("[Scheduler] Waiting 5 seconds before first run...");
+
+setTimeout(() => {
+  runScheduler()
+    .catch((err) => {
+      console.error("[Fatal] scheduler.crashed", err);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}, 5000); // Wait 5 seconds
