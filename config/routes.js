@@ -32,7 +32,7 @@ export function setupRoutes(app) {
 
       const octokit = await getInstallationOctokit(installationId);
 
-      if (event === "issue_comment" && action === "created") {
+      if (event === "issue_comment" && (action === "created" || action === "edited")) {
         await handleMention({
           provider: "github",
           payload: req.body,

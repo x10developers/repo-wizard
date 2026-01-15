@@ -61,8 +61,7 @@ export async function checkRateLimiting({
 
     if (limited) {
       throw new ValidationError(
-        "⏱️ Reminder request limited.\n\n" +
-          "A reminder was created recently for this issue. " +
+        "A reminder was created recently for this issue. " +
           `Please wait at least ${minutes} minutes before creating another reminder.`
       );
     }
