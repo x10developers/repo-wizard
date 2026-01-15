@@ -28,11 +28,18 @@ export function setupRoutes(app) {
       }
 
       const installationId = req.body.installation?.id;
+      console.log(
+        `[Webhook] Event: ${event}, Installation ID: ${installationId}`
+      );
+
       if (!installationId) return res.sendStatus(200);
 
       const octokit = await getInstallationOctokit(installationId);
 
-      if (event === "issue_comment" && (action === "created" || action === "edited")) {
+      if (
+        event === "issue_comment" &&
+        (action === "created" || action === "edited")
+      ) {
         await handleMention({
           provider: "github",
           payload: req.body,

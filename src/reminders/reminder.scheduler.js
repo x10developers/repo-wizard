@@ -43,9 +43,10 @@ async function getGitHubClient(repoFullName) {
     );
   }
 
+  // ✅ Use the installation_id we got from database
   const { data: installation } =
     await appOctokit.apps.createInstallationAccessToken({
-      installation_id: repo.installation_id,
+      installation_id: repo.installation_id, // Already retrieved above
     });
 
   return new Octokit({ auth: installation.token });
@@ -156,20 +157,33 @@ function getNextRetryDelay(retryCount) {
 /* --------------------------------------------- */
 /* Scheduler                                     */
 /* --------------------------------------------- */
-async function runScheduler() {
-  console.log("[Metric] scheduler.status=running");
+async function getGitHubClient(repoFullName) {
+  // ✅ Get installation_id from database FIRST
+  const repo = await prisma.repositories.findUnique({
+    where: { id: repoFullName },
+    select: { installation_id: true },
+  });
 
-  const now = new Date();
+  if (!repo?.installation_id) {
+    throw new Error(
+      `PERMANENT: No installation_id for repository ${repoFullName}`
+    );
+  }
 
-  const dueReminders = await prisma.reminders.findMany({
-    where: {
-      status: "pending",
-      sent_at: null,
-      scheduled_at: { lte: now },
-      retry_count: { lt: 5 },
-    },
-    orderBy: { scheduled_at: "asc" },
-    take: 50, // Process in batches
+  console.log(
+    `[Scheduler] Using installation_id: ${repo.installation_id} for ${repoFullName}`
+  );
+
+  // Generate JWT for GitHub App
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iat: now,
+    exp: now + 600, // 10 minutes
+    iss: process.env.GITHUB_APP_ID,
+  };
+
+  const token = jwt.sign(payload, process.env.GITHUB_PRIVATE_KEY, {
+    algorithm: "RS256",
   });
 
   console.log(`[Metric] reminders.checked=${dueReminders.length}`);
