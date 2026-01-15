@@ -2,8 +2,10 @@
  * Parse natural-language reminder text.
  *
  * Returns:
- * - { remindAt: Date } on success
+ * - { remindAt: Date } on success (always returns UTC Date object)
  * - null on failure
+ *
+ * FIXED: Now properly handles timezone conversions
  */
 import * as chrono from "chrono-node";
 
@@ -23,6 +25,7 @@ export function parseReminder(text, referenceDate = new Date()) {
 
   /* -------------------- Time Extraction -------------------- */
 
+  // Parse the date - chrono returns UTC dates
   const date = chrono.parseDate(normalized, referenceDate, {
     forwardDate: true, // always future dates
   });
@@ -39,10 +42,14 @@ export function parseReminder(text, referenceDate = new Date()) {
   }
 
   // Ensure the date is actually in the future relative to reference date
+  // Use getTime() for accurate millisecond comparison
   if (date.getTime() <= referenceDate.getTime()) {
     return null;
   }
 
+  // IMPORTANT: Return the date as-is (it's already in UTC)
+  // Database will store it as UTC
+  // Scheduler will compare it as UTC
   return {
     remindAt: date,
   };

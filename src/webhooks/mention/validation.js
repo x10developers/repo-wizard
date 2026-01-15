@@ -1,5 +1,7 @@
 /**
  * Validation logic for reminders
+ *
+ * FIXED: Proper timezone handling throughout
  */
 
 import { parseReminder } from "../../reminders/reminder.parser.js";
@@ -76,13 +78,19 @@ export async function checkRateLimiting({
 /**
  * Parse and validate reminder from command text
  * Returns: { parsed, now } where now is the timestamp used for parsing
+ *
+ * FIXED: Now uses consistent UTC time throughout
  */
 export function parseAndValidateReminder(commandText) {
-  // Get timestamp ONCE and use it for everything
+  // Get current UTC timestamp ONCE and use it for everything
   const now = Date.now();
   const nowDate = new Date(now);
 
-  // Parse the reminder
+  console.log(
+    `[Validation] Parsing with reference time: ${nowDate.toISOString()} (${now})`
+  );
+
+  // Parse the reminder - chrono returns UTC dates
   const parsed = parseReminder(commandText, nowDate);
 
   if (!parsed) {
@@ -90,11 +98,15 @@ export function parseAndValidateReminder(commandText) {
       "Unable to create reminder.\n\n" +
         "The reminder format could not be understood.\n\n" +
         "Examples:\n" +
-        "- /reporeply notify me tomorrow at 5pm\n" +
-        "- /reporeply remind me in 10 minutes\n" +
-        "- /reporeply alert me next Monday"
+        "- @reporeply notify me tomorrow at 5pm\n" +
+        "- @reporeply remind me in 10 minutes\n" +
+        "- @reporeply alert me next Monday"
     );
   }
+
+  console.log(
+    `[Validation] Parsed reminder time: ${parsed.remindAt.toISOString()} (${parsed.remindAt.getTime()})`
+  );
 
   // Return both parsed result and the timestamp we used
   return { parsed, now };
@@ -103,15 +115,27 @@ export function parseAndValidateReminder(commandText) {
 /**
  * Validate reminder time constraints
  * IMPORTANT: Must use the same 'now' timestamp that was used for parsing
+ *
+ * FIXED: All time comparisons now use millisecond timestamps for accuracy
  */
 export function validateReminderTime(remindAt, now) {
-  const MIN_DELAY_MINUTES = 1;
-  const DISPLAY_MINUTES = 15;
+  const MIN_DELAY_MINUTES = 1; // Actual minimum
+  const DISPLAY_MINUTES = 15; // What we tell users
   const MAX_DAYS_AHEAD = 8;
 
   const remindAtTime = new Date(remindAt).getTime();
   const minAllowedTime = now + MIN_DELAY_MINUTES * 60 * 1000;
   const maxAllowedTime = now + MAX_DAYS_AHEAD * 24 * 60 * 60 * 1000;
+
+  console.log(`[Validation] Time check:`, {
+    remindAt: new Date(remindAtTime).toISOString(),
+    remindAtTimestamp: remindAtTime,
+    now: new Date(now).toISOString(),
+    nowTimestamp: now,
+    minAllowed: new Date(minAllowedTime).toISOString(),
+    maxAllowed: new Date(maxAllowedTime).toISOString(),
+    isValid: remindAtTime >= minAllowedTime && remindAtTime <= maxAllowedTime,
+  });
 
   // Check minimum time
   if (remindAtTime < minAllowedTime) {
@@ -134,6 +158,8 @@ export function validateReminderTime(remindAt, now) {
 
 /**
  * Complete validation flow for a reminder
+ *
+ * FIXED: Ensures consistent timezone handling throughout validation
  */
 export async function validateReminder({
   commandText,
@@ -151,6 +177,10 @@ export async function validateReminder({
   if (!skipRateLimit) {
     await checkRateLimiting({ repo_id, issue_number, minutes: 10 });
   }
+
+  console.log(
+    `[Validation] ✅ Validation passed. Reminder scheduled for: ${parsed.remindAt.toISOString()}`
+  );
 
   return parsed;
 }

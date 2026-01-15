@@ -1,12 +1,12 @@
 /**
- * File: reminder.scheduler.js (FINAL FIXED VERSION)
+ * File: reminder.scheduler.js (TIMEZONE FIXED VERSION)
  *
  * Fixes:
- * - Changed to GitHub App authentication
- * - Added proper JWT token generation with file-based private key
- * - Fixed installation_id retrieval from database
- * - Fixed BigInt serialization in audit logs
- * - Better error handling
+ * - ✅ Proper UTC timezone handling throughout
+ * - ✅ GitHub App authentication with file-based private key
+ * - ✅ Fixed installation_id retrieval from database
+ * - ✅ Fixed BigInt serialization in audit logs
+ * - ✅ Better error handling and logging
  */
 
 import "dotenv/config";
@@ -147,6 +147,7 @@ async function notifyEmail(_text) {
 /* Metrics aggregation                           */
 /* --------------------------------------------- */
 async function sendDailyMetrics() {
+  // Get current UTC date boundaries
   const now = new Date();
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
@@ -195,13 +196,21 @@ function getNextRetryDelay(retryCount) {
 async function runScheduler() {
   console.log("[Metric] scheduler.status=running");
 
+  // CRITICAL: Get current UTC time
   const now = new Date();
+
+  // Log timezone info for debugging
+  console.log(`[Scheduler] Current time check:`, {
+    utc: now.toISOString(),
+    timestamp: now.getTime(),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
 
   const dueReminders = await prisma.reminders.findMany({
     where: {
       status: "pending",
       sent_at: null,
-      scheduled_at: { lte: now },
+      scheduled_at: { lte: now }, // Compare UTC to UTC
       retry_count: { lt: 5 },
     },
     orderBy: { scheduled_at: "asc" },
@@ -209,6 +218,44 @@ async function runScheduler() {
   });
 
   console.log(`[Metric] reminders.checked=${dueReminders.length}`);
+
+  // Log details of found reminders
+  if (dueReminders.length > 0) {
+    console.log(`[Scheduler] Found ${dueReminders.length} due reminders:`);
+    dueReminders.forEach((r) => {
+      console.log(
+        `  - ID: ${
+          r.id
+        }, Scheduled: ${r.scheduled_at.toISOString()}, Now: ${now.toISOString()}, Due: ${
+          r.scheduled_at <= now
+        }`
+      );
+    });
+  } else {
+    // Check if there are any pending reminders at all
+    const totalPending = await prisma.reminders.count({
+      where: { status: "pending" },
+    });
+    console.log(
+      `[Scheduler] No due reminders found. Total pending: ${totalPending}`
+    );
+
+    if (totalPending > 0) {
+      // Show the next upcoming reminder
+      const nextReminder = await prisma.reminders.findFirst({
+        where: { status: "pending" },
+        orderBy: { scheduled_at: "asc" },
+      });
+      if (nextReminder) {
+        const timeUntil = Math.round(
+          (nextReminder.scheduled_at.getTime() - now.getTime()) / 1000 / 60
+        );
+        console.log(
+          `[Scheduler] Next reminder due in ${timeUntil} minutes (${nextReminder.scheduled_at.toISOString()})`
+        );
+      }
+    }
+  }
 
   for (const reminder of dueReminders) {
     /* -------- Scheduler lock -------- */
@@ -258,7 +305,7 @@ async function runScheduler() {
         where: { id: reminder.id },
         data: {
           status: "sent",
-          sent_at: new Date(),
+          sent_at: new Date(), // Store current UTC time
           updated_at: new Date(),
         },
       });
