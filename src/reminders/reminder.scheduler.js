@@ -1,9 +1,10 @@
 /**
- * File: reminder.scheduler.js (FIXED)
+ * File: reminder.scheduler.js (FINAL FIXED VERSION)
  *
  * Fixes:
- * - Changed to GitHub App authentication (was using GITHUB_TOKEN)
- * - Added proper JWT token generation
+ * - Changed to GitHub App authentication
+ * - Added proper JWT token generation with file-based private key
+ * - Fixed installation_id retrieval from database
  * - Better error handling
  */
 
@@ -11,27 +12,14 @@ import "dotenv/config";
 import { prisma } from "../lib/prisma.js";
 import { Octokit } from "@octokit/rest";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
 
 /* --------------------------------------------- */
 /* GitHub App Authentication                     */
 /* --------------------------------------------- */
 async function getGitHubClient(repoFullName) {
-  // Generate JWT for GitHub App
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iat: now,
-    exp: now + 600, // 10 minutes
-    iss: process.env.GITHUB_APP_ID,
-  };
-
-  const token = jwt.sign(payload, process.env.GITHUB_PRIVATE_KEY, {
-    algorithm: "RS256",
-  });
-
-  // Get installation token
-  const appOctokit = new Octokit({ auth: token });
-
-  // Get installation ID for this repository
+  // ✅ Get installation_id from database FIRST
   const repo = await prisma.repositories.findUnique({
     where: { id: repoFullName },
     select: { installation_id: true },
@@ -43,10 +31,50 @@ async function getGitHubClient(repoFullName) {
     );
   }
 
-  // ✅ Use the installation_id we got from database
+  console.log(
+    `[Scheduler] Using installation_id: ${repo.installation_id} for ${repoFullName}`
+  );
+
+  // ✅ Read private key from file
+  let privateKey;
+
+  if (process.env.GITHUB_PRIVATE_KEY_PATH) {
+    // Resolve relative path from project root
+    const keyPath = path.resolve(
+      process.cwd(),
+      process.env.GITHUB_PRIVATE_KEY_PATH
+    );
+    console.log(`[Scheduler] Reading private key from: ${keyPath}`);
+
+    privateKey = fs.readFileSync(keyPath, "utf8");
+    console.log("[Scheduler] ✅ Private key loaded from file");
+  } else if (process.env.GITHUB_PRIVATE_KEY) {
+    privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, "\n");
+    console.log("[Scheduler] ✅ Private key loaded from env var");
+  } else {
+    throw new Error(
+      "PERMANENT: No GITHUB_PRIVATE_KEY or GITHUB_PRIVATE_KEY_PATH found"
+    );
+  }
+
+  // Generate JWT for GitHub App
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iat: now,
+    exp: now + 600, // 10 minutes
+    iss: process.env.GITHUB_APP_ID,
+  };
+
+  const token = jwt.sign(payload, privateKey, {
+    algorithm: "RS256",
+  });
+
+  // Get installation token
+  const appOctokit = new Octokit({ auth: token });
+
   const { data: installation } =
     await appOctokit.apps.createInstallationAccessToken({
-      installation_id: repo.installation_id, // Already retrieved above
+      installation_id: repo.installation_id,
     });
 
   return new Octokit({ auth: installation.token });
@@ -157,33 +185,20 @@ function getNextRetryDelay(retryCount) {
 /* --------------------------------------------- */
 /* Scheduler                                     */
 /* --------------------------------------------- */
-async function getGitHubClient(repoFullName) {
-  // ✅ Get installation_id from database FIRST
-  const repo = await prisma.repositories.findUnique({
-    where: { id: repoFullName },
-    select: { installation_id: true },
-  });
+async function runScheduler() {
+  console.log("[Metric] scheduler.status=running");
 
-  if (!repo?.installation_id) {
-    throw new Error(
-      `PERMANENT: No installation_id for repository ${repoFullName}`
-    );
-  }
+  const now = new Date();
 
-  console.log(
-    `[Scheduler] Using installation_id: ${repo.installation_id} for ${repoFullName}`
-  );
-
-  // Generate JWT for GitHub App
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iat: now,
-    exp: now + 600, // 10 minutes
-    iss: process.env.GITHUB_APP_ID,
-  };
-
-  const token = jwt.sign(payload, process.env.GITHUB_PRIVATE_KEY, {
-    algorithm: "RS256",
+  const dueReminders = await prisma.reminders.findMany({
+    where: {
+      status: "pending",
+      sent_at: null,
+      scheduled_at: { lte: now },
+      retry_count: { lt: 5 },
+    },
+    orderBy: { scheduled_at: "asc" },
+    take: 50, // Process in batches
   });
 
   console.log(`[Metric] reminders.checked=${dueReminders.length}`);
