@@ -11,16 +11,15 @@ import { ValidationError } from "../../utils/errors.js";
  */
 export function isValidCommand(body) {
   const normalized = body.toLowerCase().trim();
-  const allowedPrefixes = [
-    "/reporeply",
+  
+  // Only respond to @ mentions (case-insensitive)
+  const allowedMentions = [
     "@reporeply",
-    "reporeply",
-    ".reporeply",
-    ",reporeply",
-    "#reporeply",
+    "@repo",
+    "@reply",
   ];
 
-  return allowedPrefixes.some((prefix) => normalized.startsWith(prefix));
+  return allowedMentions.some((mention) => normalized.startsWith(mention));
 }
 
 /**
@@ -28,7 +27,11 @@ export function isValidCommand(body) {
  */
 export function isAdminCommand(body) {
   const normalized = body.toLowerCase().trim();
-  return normalized.startsWith("/reporeply admin");
+  return (
+    normalized.startsWith("@reporeply admin") ||
+    normalized.startsWith("@repo admin") ||
+    normalized.startsWith("@reply admin")
+  );
 }
 
 /**
@@ -36,12 +39,12 @@ export function isAdminCommand(body) {
  */
 export function extractCommandText(body) {
   return body
-    .replace(/^\/reporeply\s+admin/i, "")
-    .replace(/^\/reporeply/i, "")
+    .replace(/^@reporeply\s+admin/i, "")
     .replace(/^@reporeply/i, "")
-    .replace(/^\.reporeply/i, "")
-    .replace(/^,reporeply/i, "")
-    .replace(/^#reporeply/i, "")
+    .replace(/^@repo\s+admin/i, "")
+    .replace(/^@repo/i, "")
+    .replace(/^@reply\s+admin/i, "")
+    .replace(/^@reply/i, "")
     .trim();
 }
 
