@@ -105,7 +105,7 @@ export function parseAndValidateReminder(commandText) {
  * IMPORTANT: Must use the same 'now' timestamp that was used for parsing
  */
 export function validateReminderTime(remindAt, now) {
-  const MIN_DELAY_MINUTES = 16;
+  const MIN_DELAY_MINUTES = 1;
   const DISPLAY_MINUTES = 15;
   const MAX_DAYS_AHEAD = 8;
 
