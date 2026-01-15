@@ -18,12 +18,24 @@ import path from "path";
 /* --------------------------------------------- */
 /* GitHub App Authentication                     */
 /* --------------------------------------------- */
+
 async function getGitHubClient(repoFullName) {
   // ✅ Get installation_id from database FIRST
   const repo = await prisma.repositories.findUnique({
     where: { id: repoFullName },
     select: { installation_id: true },
   });
+
+  // 🔍 ADD THESE DEBUG LINES:
+  console.log(`[Scheduler] DEBUG - Full repo object:`, JSON.stringify(repo));
+  console.log(
+    `[Scheduler] DEBUG - installation_id value:`,
+    repo?.installation_id
+  );
+  console.log(
+    `[Scheduler] DEBUG - installation_id type:`,
+    typeof repo?.installation_id
+  );
 
   if (!repo?.installation_id) {
     throw new Error(
