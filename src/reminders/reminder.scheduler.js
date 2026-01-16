@@ -29,8 +29,6 @@ async function runScheduler() {
   updateHealthCheck({ lastRun: new Date() });
 
   try {
-    console.log("[Scheduler] Starting run");
-
     /* -------------------- Clean Stale Locks -------------------- */
     // Clean stale locks
     await cleanupStaleLocks();
@@ -50,6 +48,7 @@ async function runScheduler() {
     });
 
     if (dueReminders.length > 0) {
+      console.log("[Scheduler] Starting run");
       console.log(`[Scheduler] Found ${dueReminders.length} due reminders`);
     }
 
