@@ -69,7 +69,7 @@ export async function handleGitLabMention(payload, accessToken) {
     const reminderData = {
       repo_id: payload.project.path_with_namespace,
       issue_number: payload.object_attributes.iid,
-      message: `🔔 Reminder for @${payload.user.username}`,
+      message: `Scheduled reminder for @${payload.user.username} Please review when convenient.`,
       scheduled_at: parsed.remindAt,
       created_by: payload.user.username,
     };

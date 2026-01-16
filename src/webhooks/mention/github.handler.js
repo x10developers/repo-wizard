@@ -65,7 +65,7 @@ export async function handleGitHubMention(payload, octokit) {
     const reminderData = {
       repo_id: payload.repository.full_name,
       issue_number: payload.issue.number,
-      message: `🔔 Reminder for @${payload.sender.login}`,
+      message: `Scheduled reminder for @${payload.sender.login} Please review when convenient.`,
       scheduled_at: parsed.remindAt,
       created_by: payload.sender.login,
     };
