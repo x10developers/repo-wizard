@@ -395,15 +395,18 @@ async function runScheduler() {
 /* --------------------------------------------- */
 
 // Add startup delay to avoid race conditions
-console.log("[Scheduler] Waiting 5 seconds before first run...");
+console.log("[Scheduler] Starting reminder scheduler");
 
+// run once after startup delay
 setTimeout(() => {
-  runScheduler()
-    .catch((err) => {
-      console.error("[Fatal] scheduler.crashed", err);
-      process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
-}, 5000); // Wait 5 seconds
+  runScheduler().catch((err) => {
+    console.error("[Scheduler] first run failed:", err);
+  });
+}, 5000);
+
+// run continuously every 30 seconds
+setInterval(() => {
+  runScheduler().catch((err) => {
+    console.error("[Scheduler] interval run failed:", err);
+  });
+}, 30 * 1000);

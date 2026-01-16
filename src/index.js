@@ -41,3 +41,17 @@ setupErrorHandlers(app);
 
 /* -------------------- Start Server -------------------- */
 startServer(app, PORT);
+
+/* -------------------- Prisma Start -------------------- */
+
+process.on("SIGTERM", async () => {
+  console.log("[Shutdown] SIGTERM received");
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  console.log("[Shutdown] SIGINT received");
+  await prisma.$disconnect();
+  process.exit(0);
+});
