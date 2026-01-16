@@ -101,7 +101,7 @@ async function markAsSent(reminder) {
     },
   });
 
-  console.log(`[Reminder] ✅ Sent: ${reminder.id}`);
+  console.log(`[Reminder]  ✅ Sent: ${reminder.id}`);
 }
 
 /* -------------------- Handle Reminder Failure -------------------- */

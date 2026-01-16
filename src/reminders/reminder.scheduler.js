@@ -49,7 +49,9 @@ async function runScheduler() {
       take: CONFIG.BATCH_SIZE,
     });
 
-    console.log(`[Scheduler] Found ${dueReminders.length} due reminders`);
+    if (dueReminders.length > 0) {
+      console.log(`[Scheduler] Found ${dueReminders.length} due reminders`);
+    }
 
     /* -------------------- Process Each Reminder -------------------- */
     // Process reminders
