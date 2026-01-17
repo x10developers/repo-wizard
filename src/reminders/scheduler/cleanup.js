@@ -15,11 +15,10 @@ export async function cleanupStaleLocks() {
   const result = await prisma.reminders.updateMany({
     where: {
       status: "processing",
-      updated_at: { lt: staleThreshold },
+      created_at: { lt: staleThreshold },
     },
     data: {
       status: "pending",
-      updated_at: new Date(),
     },
   });
 

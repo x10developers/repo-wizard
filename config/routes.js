@@ -1,9 +1,11 @@
 import { asyncHandler } from "../src/utils/errors.js";
 import { getInstallationOctokit } from "../services/github.service.js";
 import { handleMention } from "../src/webhooks/mention/index.js";
-import { handleTelegramCommand } from "../src/alerts/telegram.commands.js";
 import { handleDailyCron } from "../services/cron.service.js";
 import gitlabRoutes from "../src/routes/auth/gitlab.routes.js";
+
+// Import Telegram webhook setup
+import { setupTelegramWebhooks } from "./telegram-webhooks.js";
 
 export function setupRoutes(app) {
   // Health checks
@@ -16,7 +18,6 @@ export function setupRoutes(app) {
   });
 
   /* -------------------- GitHub webhook -------------------- */
-
   app.post(
     "/webhook",
     asyncHandler(async (req, res) => {
@@ -63,40 +64,13 @@ export function setupRoutes(app) {
   );
 
   /* -------------------- GitLab Routes -------------------- */
-
   app.use("/gitlab", gitlabRoutes);
   app.use("/auth/gitlab", gitlabRoutes);
 
-  /* -------------------- Telegram webhook -------------------- */
-
-  app.post("/telegram/webhook", async (req, res) => {
-    res.sendStatus(200);
-
-    try {
-      const message = req.body?.message;
-      if (!message) return;
-
-      const reply = await handleTelegramCommand(message);
-      if (!reply) return;
-
-      await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: message.chat.id,
-            text: reply,
-          }),
-        }
-      );
-    } catch (err) {
-      console.error("Telegram webhook failed:", err.message);
-    }
-  });
+  /* -------------------- Telegram Webhooks -------------------- */
+  setupTelegramWebhooks(app);
 
   /* -------------------- Daily Cron -------------------- */
-
   app.post(
     "/cron/daily",
     asyncHandler(async (req, res) => {
@@ -105,3 +79,5 @@ export function setupRoutes(app) {
     })
   );
 }
+
+// Remove the sendMessageWithMarkup helper function if it exists at the bottom
