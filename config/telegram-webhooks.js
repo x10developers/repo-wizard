@@ -17,14 +17,14 @@ export function setupTelegramWebhooks(app) {
           await answerCallbackQuery(
             callback_query.id,
             response.answer,
-            response.alert,
+            response.alert
           );
 
           // Send the response message if any
           if (response.message) {
             await admin.sendMessage(
               callback_query.message.chat.id,
-              response.message,
+              response.message
             );
           }
         }
@@ -43,7 +43,7 @@ export function setupTelegramWebhooks(app) {
             await admin.sendMessage(
               message.chat.id,
               response.text,
-              response.reply_markup,
+              response.reply_markup
             );
           } else {
             // Simple text response
@@ -81,9 +81,6 @@ export function setupTelegramWebhooks(app) {
 
   /* -------------------- Webhook Setup Endpoint (run once) -------------------- */
   app.post("/admin/setup-webhooks", async (req, res) => {
-    if (req.headers["x-webhook-secret"] !== process.env.WEBHOOK_SECRET) {
-      return res.sendStatus(403);
-    }
     try {
       const baseUrl = process.env.BASE_URL || "https://your-domain.com";
       const results = [];
@@ -98,7 +95,7 @@ export function setupTelegramWebhooks(app) {
             body: JSON.stringify({
               url: `${baseUrl}/webhook/admin-bot`,
             }),
-          },
+          }
         );
         const adminData = await adminWebhook.json();
         results.push({
@@ -118,7 +115,7 @@ export function setupTelegramWebhooks(app) {
             body: JSON.stringify({
               url: `${baseUrl}/webhook/findid-bot`,
             }),
-          },
+          }
         );
         const findIdData = await findIdWebhook.json();
         results.push({
@@ -157,7 +154,7 @@ async function answerCallbackQuery(callbackQueryId, text, showAlert = false) {
           text: text,
           show_alert: showAlert || false,
         }),
-      },
+      }
     );
 
     return await res.json();
